@@ -102,3 +102,14 @@ def test_build_without_hic(inputs):
     for m in ("v2g", "e2g"):
         p = load_model(m).predict(out)
         assert len(p) == len(rows) and np.all((p >= 0) & (p <= 1))
+
+
+@pytest.mark.skipif(shutil.which("bedtools") is None, reason="bedtools not installed")
+def test_signal_sums_parallel_tracks_agree(inputs):
+    """Regression: tracks summed in parallel must not share temporary files (each must equal the serial result)."""
+    regions = pd.DataFrame({"chrom": ["chr1"] * 200, "start": np.arange(200) * 400, "end": np.arange(200) * 400 + 500})
+    expected = [manual_sum(a, b) for a, b in zip(regions.start, regions.end)]
+    for _ in range(3):
+        s = cf.signal_sums(regions, {m: str(inputs["bedgraph"]) for m in hz.MARKS}, threads=len(hz.MARKS))
+        for m in hz.MARKS:
+            assert np.allclose(s[m], expected), m
