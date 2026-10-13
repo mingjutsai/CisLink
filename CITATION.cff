@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use CisLink, please cite the article below."
+title: "CisLink: general models linking noncoding variants and cis-regulatory elements to their target genes"
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/mingjutsai/CisLink"
+authors:
+  - family-names: Tsai
+    given-names: Ming-Ju
+  - family-names: Hsu
+    given-names: Yi-Hsiang
+preferred-citation:
+  type: article
+  title: "General models link noncoding variants and cis-regulatory elements to their target genes"
+  authors:
+    - family-names: Tsai
+      given-names: Ming-Ju
+    - family-names: Hsu
+      given-names: Yi-Hsiang
+  year: 2026
+  notes: "In preparation"
