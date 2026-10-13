@@ -64,8 +64,6 @@
   0.12787650404877052
  ],
  "intercept": -5.426029643568387,
- "C": 0.334699436673686,
- "penalty": "l2",
  "training": {
   "data": "K562 CRISPR element-gene pairs used to train ENCODE-rE2G (Gschwind et al.)",
   "pairs": 10250,
