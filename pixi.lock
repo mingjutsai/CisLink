@@ -2606,7 +2606,7 @@ packages:
 - pypi: ./
   name: cislink
   version: 1.0.0
-  sha256: bc38a2413f955647d8fba81ae09a93e1d5381d3b1b26929136c8d42e2dbfc98e
+  sha256: c0968b4db8e488e2fc06786d7f32a087e7f758d4ee661b094aba81031eb6a5b0
   requires_dist:
   - numpy>=1.23
   - pandas>=1.5

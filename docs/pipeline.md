@@ -26,6 +26,29 @@ pixi run -e pipeline cislink build --help
 CisLink-V2G needs only accessibility, expression and the megamap; leave the histone tracks and `hic` out to build
 V2G features only (E2G is then not scored).
 
+## Input formats
+
+| Input | Accepted |
+|---|---|
+| Variants (`--variants`) | TSV with columns `SNPID`, `chr`, `pos` (1-based), or without a header: chromosome, position and optionally an ID (default `chr:pos`) |
+| Elements (`--elements`) | BED: chrom, start, end, name (0-based, half-open) |
+| Expression | ENCODE RSEM output (`transcript_id` / `gene_id` with a `TPM` column), or any table with the Ensembl ID in the first column and the value in the last (header optional). Version suffixes are ignored (`ENSG…​.11` = `ENSG…`); PAR_Y rows are dropped; IDs absent from the table get 0 |
+| Chromatin tracks | bedGraph (chrom, start, end, value; `track`/`browser`/`#` lines skipped; `.gz` allowed) or bigWig (`.bw`, `.bigWig`) |
+| Candidate elements | BED: chrom, start, end, activity |
+
+**Chromosome naming is detected per file.** Variants, elements, tracks and Hi-C maps may use `chr1` or `1`; names are
+converted to the annotation's convention internally. This matters because a bedGraph named `1` scored against
+`chr1` regions would otherwise give all-zero signal without an error. bedGraph tracks must agree with each other.
+
+`cislink validate` runs the same preflight that `cislink build` runs first: required keys, readable files, track
+names (`DNase` = accessibility is required), the first data row of each bedGraph, chromosome naming, bedtools, the
+stable Ensembl IDs shared by the annotation and the expression tables, duplicated variant IDs, and element
+coordinates. Problems are reported before any long step starts.
+
+```bash
+pixi run -e pipeline cislink validate --variants variants.tsv --config osteoblast.yaml
+```
+
 ## Configuration
 
 ```yaml
@@ -64,6 +87,8 @@ Quantiles are kept at 6 significant digits, as in the manuscript pipeline, so re
 ## Run
 
 ```bash
+# check the inputs first (build runs the same checks)
+pixi run -e pipeline cislink validate --variants variants.tsv --config osteoblast.yaml
 # GWAS variants (TSV: SNPID, chr, pos) -> every protein-coding transcript TSS within 1 Mb
 pixi run -e pipeline cislink build --variants variants.tsv --config osteoblast.yaml --score -o features.tsv
 # candidate elements (BED: chrom, start, end, name)

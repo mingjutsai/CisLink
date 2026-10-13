@@ -30,6 +30,7 @@ import numpy as np
 import pandas as pd
 
 from . import harmonize as hz
+from .inputs import chr_prefix, format_chr, read_expression, read_expression_raw
 
 MARKS = hz.MARKS
 ELEMENT_HALF_WIDTH = 250
@@ -97,6 +98,8 @@ def variant_pairs(variants: pd.DataFrame, tss: pd.DataFrame, max_distance: int =
     """Rows of variant x protein-coding transcript with the TSS within ``max_distance``.
     ``variants``: columns SNPID, chr (chrN), pos (1-based)."""
     rows = []
+    prefix = tss.chrom.iloc[0].lower().startswith("chr") if len(tss) else True
+    variants = variants.assign(chr=variants.chr.map(lambda c: format_chr(c, prefix)))
     for c, v in variants.drop_duplicates("SNPID").groupby("chr", sort=False):
         t = tss[tss.chrom == c].sort_values("tss", kind="mergesort")
         pos = t.tss.to_numpy()
@@ -116,6 +119,8 @@ def element_pairs(elements: pd.DataFrame, tss: pd.DataFrame, max_distance: int =
     """Rows of element x protein-coding transcript with the TSS within ``max_distance`` of the element midpoint.
     ``elements``: columns name, chr, start, end (0-based half-open, as BED)."""
     rows = []
+    prefix = tss.chrom.iloc[0].lower().startswith("chr") if len(tss) else True
+    elements = elements.assign(chr=elements.chr.map(lambda c: format_chr(c, prefix)))
     for c, v in elements.groupby("chr", sort=False):
         t = tss[tss.chrom == c].sort_values("tss", kind="mergesort")
         pos = t.tss.to_numpy()
@@ -139,7 +144,9 @@ def _is_bigwig(path) -> bool:
 def _sums_bigwig(regions: pd.DataFrame, path) -> np.ndarray:
     import pyBigWig
     bw = pyBigWig.open(str(path)); chroms = bw.chroms(); out = np.zeros(len(regions))
+    prefix = any(n.lower().startswith("chr") for n in chroms)
     for i, (c, s, e) in enumerate(zip(regions.chrom, regions.start, regions.end)):
+        c = format_chr(c, prefix)
         if c not in chroms:
             continue
         iv = bw.intervals(c, max(int(s), 0), min(int(e), chroms[c])) or []
@@ -162,12 +169,18 @@ def signal_sums(regions: pd.DataFrame, tracks: dict[str, str], bedtools: str = "
     """sum(signal x overlapping bp) per region (columns chrom, start, end) for each track; NaN for marks without a track."""
     reg = regions[["chrom", "start", "end"]].drop_duplicates().reset_index(drop=True)
     with tempfile.TemporaryDirectory(prefix="cislink_") as tmp:
-        bed = os.path.join(tmp, "regions.bed")   # written once, read by every track
-        reg.assign(i=np.arange(len(reg)))[["chrom", "start", "end", "i"]].to_csv(bed, sep="\t", header=False, index=False)
-
+        # region files are written before the parallel step and only read there, one per chromosome naming
+        beds = {}
+        for m, p in tracks.items():
+            if m in MARKS and not _is_bigwig(p):
+                pre = bool(chr_prefix(p))
+                if pre not in beds:
+                    beds[pre] = os.path.join(tmp, f"regions_{'chr' if pre else 'bare'}.bed")
+                    reg.assign(chrom=reg.chrom.map(lambda c: format_chr(c, pre)), i=np.arange(len(reg)))[["chrom", "start", "end", "i"]].to_csv(
+                        beds[pre], sep="\t", header=False, index=False)
         def run(m):
             p = tracks[m]
-            return m, (_sums_bigwig(reg, p) if _is_bigwig(p) else _sums_bedgraph(len(reg), bed, p, bedtools, tmp, m))
+            return m, (_sums_bigwig(reg, p) if _is_bigwig(p) else _sums_bedgraph(len(reg), beds[bool(chr_prefix(p))], p, bedtools, tmp, m))
         with ThreadPoolExecutor(max_workers=threads) as pool:
             res = dict(pool.map(run, [m for m in MARKS if m in tracks]))
     out = reg.copy()
@@ -182,21 +195,16 @@ def _lookup(sums: pd.DataFrame, chrom, start, end, mark):
 
 
 # ---------------------------------------------------------------- expression
-def _read_tpm(path, id_column):
-    t = pd.read_csv(path, sep="\t", usecols=[id_column, "TPM"])
-    return t[~t[id_column].astype(str).str.contains("_PAR_Y")]
-
-
 def transcript_expression(tx_ids, path) -> np.ndarray:
-    t = _read_tpm(path, "transcript_id")
-    tpm = t.assign(k=t.transcript_id.str.split(".").str[0]).drop_duplicates("k", keep="last").set_index("k").TPM
+    """Transcript TPM matched on the stable Ensembl ID; 0 if absent."""
+    tpm = read_expression(path, "transcript").set_index("id").TPM
     return pd.Series(tx_ids).str.split(".").str[0].map(tpm).fillna(0.0).to_numpy()
 
 
 def gene_expression(genes_symbols, genes: pd.DataFrame, path) -> np.ndarray:
-    """Gene TPM via symbol -> versioned gene ID (the last GTF gene record of a symbol)."""
-    sym_to_id = dict(zip(genes.gene, genes.gene_id))
-    tpm = _read_tpm(path, "gene_id").drop_duplicates("gene_id", keep="last").set_index("gene_id").TPM
+    """Gene TPM via symbol -> gene ID (the last GTF gene record of a symbol), matched on the stable ID; 0 if absent."""
+    sym_to_id = dict(zip(genes.gene, genes.gene_id.str.split(".").str[0]))
+    tpm = read_expression(path, "gene").set_index("id").TPM
     return pd.Series(genes_symbols).map(sym_to_id).map(tpm).fillna(0.0).to_numpy()
 
 
@@ -204,9 +212,8 @@ def expression_factors(gtf_transcripts: pd.DataFrame, genes: pd.DataFrame, trans
     """Scale factors that make expression protein-coding TPM (1e6 / protein-coding TPM sum)."""
     pc_tx = set(gtf_transcripts[gtf_transcripts.transcript_type == "protein_coding"].TX.str.split(".").str[0])
     pc_g = set(genes[genes.gene_type == "protein_coding"].gene_id.str.split(".").str[0])
-    g = pd.read_csv(gene_quant, sep="\t", usecols=["gene_id", "TPM"]); t = pd.read_csv(transcript_quant, sep="\t", usecols=["transcript_id", "TPM"])
-    return hz.expression_factors(g[g.gene_id.str.split(".").str[0].isin(pc_g)].TPM.sum(),
-                                 t[t.transcript_id.str.split(".").str[0].isin(pc_tx)].TPM.sum())
+    g, t = read_expression_raw(gene_quant, "gene"), read_expression_raw(transcript_quant, "transcript")   # every row, as in the manuscript
+    return hz.expression_factors(g[g.id.isin(pc_g)].TPM.sum(), t[t.id.isin(pc_tx)].TPM.sum())
 
 
 # ---------------------------------------------------------------- Hi-C

@@ -1,4 +1,4 @@
-"""Command line: ``cislink build``, ``cislink score``, ``cislink rank`` and ``cislink info``."""
+"""Command line: ``cislink validate``, ``cislink build``, ``cislink score``, ``cislink rank`` and ``cislink info``."""
 from __future__ import annotations
 
 import argparse
@@ -24,20 +24,42 @@ def _score(a) -> int:
     return 0
 
 
-def _build(a) -> int:
+def _load_inputs(a):
     import yaml
 
-    from . import features as cf
+    from .inputs import read_variants
     cfg = yaml.safe_load(open(a.config))
+    v = read_variants(a.variants) if a.variants else None
+    e = None
+    if a.elements:
+        e = pd.read_csv(a.elements, sep="\t", header=None, comment="#", usecols=[0, 1, 2, 3], names=["chr", "start", "end", "name"])
+    return cfg, v, e
+
+
+def _validate(a) -> int:
+    from .inputs import InputError, preflight
+    cfg, v, e = _load_inputs(a)
+    try:
+        preflight(cfg, v, e, log=lambda s: print(s, file=sys.stderr))
+    except InputError as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def _build(a) -> int:
+    from . import features as cf
+    from .inputs import InputError, preflight
+    log = lambda s: print(s, file=sys.stderr, flush=True)  # noqa: E731
+    cfg, v, e = _load_inputs(a)
+    try:
+        preflight(cfg, v, e, log=log)
+    except InputError as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
     tx, _ = cf.read_gtf(cfg["gtf"])
     tss = cf.protein_coding_tss(tx)
-    if a.variants:
-        v = pd.read_csv(a.variants, sep="\t", dtype={"SNPID": str})
-        rows = cf.variant_pairs(v, tss, a.max_distance)
-    else:
-        e = pd.read_csv(a.elements, sep="\t", header=None, usecols=[0, 1, 2, 3], names=["chr", "start", "end", "name"])
-        rows = cf.element_pairs(e, tss, a.max_distance)
-    log = lambda s: print(s, file=sys.stderr, flush=True)  # noqa: E731
+    rows = cf.variant_pairs(v, tss, a.max_distance) if v is not None else cf.element_pairs(e, tss, a.max_distance)
     bt, th = cfg.get("bedtools", "bedtools"), int(cfg.get("threads", 4))
     # the cell's quantiles: read when given, otherwise computed and saved next to the output for reuse
     if cfg.get("chromatin_quantiles"):
@@ -116,11 +138,15 @@ def main(argv=None) -> int:
     s.add_argument("--keep", help="comma-separated columns to keep with the scores (default: all)")
     s.add_argument("--threshold", type=int, choices=(50, 70), help="add a column flagging scores above the recall threshold")
     s.set_defaults(func=_score)
+    def inputs_args(b):
+        g = b.add_mutually_exclusive_group(required=True)
+        g.add_argument("--variants", help="TSV with columns SNPID, chr, pos (1-based, GRCh38), or chrom, pos[, ID] without a header")
+        g.add_argument("--elements", help="BED (chrom, start, end, name) of candidate elements (GRCh38)")
+        b.add_argument("--config", required=True, help="YAML with the cell's inputs")
+    vd = sub.add_parser("validate", help="check a build configuration and its inputs without running the pipeline")
+    inputs_args(vd); vd.set_defaults(func=_validate)
     b = sub.add_parser("build", help="compute harmonized features from a cell type's raw data (see docs/pipeline.md)")
-    g = b.add_mutually_exclusive_group(required=True)
-    g.add_argument("--variants", help="TSV with columns SNPID, chr (chrN), pos (1-based, GRCh38)")
-    g.add_argument("--elements", help="BED (chrom, start, end, name) of candidate elements (GRCh38)")
-    b.add_argument("--config", required=True, help="YAML with the cell's inputs")
+    inputs_args(b)
     b.add_argument("--max-distance", type=int, default=1_000_000)
     b.add_argument("--score", action="store_true", help="also add CisLink-V2G (and CisLink-E2G when the config has Hi-C) scores")
     b.add_argument("-o", "--output", required=True)

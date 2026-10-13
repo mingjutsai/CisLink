@@ -82,6 +82,7 @@ manuscript's matrices exactly; see [`docs/pipeline.md`](docs/pipeline.md) and `e
 
 ```bash
 pixi install -e pipeline
+pixi run -e pipeline cislink validate --variants variants.tsv --config my_cell.yaml   # preflight
 pixi run -e pipeline cislink build --variants variants.tsv --config my_cell.yaml --score -o features.tsv
 pixi run cislink rank features.tsv -o genes.tsv
 ```
