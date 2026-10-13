@@ -1,0 +1,79 @@
+{
+ "name": "CisLink-V2G",
+ "description": "Variant-to-gene model: accessibility, expression, multi-tissue Hi-C megamap, distance and gene context; scores every variant window.",
+ "version": "1.0.0",
+ "features": [
+  "DNase_Enh",
+  "DNase_Prom",
+  "Tx_expression",
+  "Gene_expression",
+  "HiC_megamap_oe",
+  "distance",
+  "log10_distance",
+  "n_genes_between",
+  "gene_rank",
+  "is_nearest_gene",
+  "ubiquitous_gene",
+  "Enh_length",
+  "powerlaw_contact"
+ ],
+ "transform": "sign(x) * log1p(|x|)",
+ "scaler_mean": [
+  9.350026542347635,
+  9.755548862766394,
+  2.6264688085468593,
+  4.802130557908848,
+  0.7641941170970579,
+  12.52169850940291,
+  1.858475711864815,
+  1.9852747720519777,
+  2.622971025801801,
+  0.04314418548265805,
+  0.18353184858923818,
+  6.376510673286474,
+  0.04319147252080877
+ ],
+ "scaler_scale": [
+  1.08996684956865,
+  1.02947359413706,
+  2.0149655024214406,
+  1.4154138865201262,
+  0.3081041905382365,
+  1.2287605598919422,
+  0.08878471015745822,
+  1.0696138756982858,
+  0.973882589448084,
+  0.1674629803386341,
+  0.3058278011332557,
+  0.4485835082463106,
+  0.10164314173121798
+ ],
+ "coef": [
+  1.2118178412223137,
+  -0.47773583097905725,
+  0.15637553518307526,
+  -0.30431416013023793,
+  0.2019227508201996,
+  -0.06156312821839642,
+  -0.43036107222359504,
+  -1.07435494515286,
+  -0.18569543001781136,
+  0.13583253558139163,
+  -0.6234783573730424,
+  -0.4660476821293469,
+  0.12787650404877052
+ ],
+ "intercept": -5.426029643568387,
+ "training": {
+  "data": "K562 CRISPR element-gene pairs used to train ENCODE-rE2G (Gschwind et al.)",
+  "pairs": 10250,
+  "positives": 469
+ },
+ "thresholds": {
+  "recall_70": 0.139,
+  "recall_50": 0.41,
+  "note": "score at which held-out K562 CRISPR pairs reach the given recall"
+ },
+ "source_sha256": "eb885cedbffddd61ac11f150afba5afd47ef84719c9d2e6badb274c64d5529d9",
+ "exported_with_sklearn": "1.2.2"
+}
