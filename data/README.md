@@ -18,15 +18,25 @@ available predictions.
 
 Coordinates are GRCh38. Features follow `docs/features.md`. Distance baseline = negative element–TSS distance.
 
+## GWAS silver standard (`data/gwas/silver_standard.tsv.gz`)
+
+Every candidate gene within 1 Mb of the 568 noncoding UK Biobank credible sets for 31 traits whose one gene within
+2 Mb carries an independent coding variant for the same trait (the silver gene; Weeks et al. 2023, Gschwind et al.;
+github.com/Deylab999MSKCC/e2g-benchmarking), as in Supplementary Table 6: trait, cell type scored, credible set,
+fine-mapping region, candidate gene, silver-gene flag, CisLink-V2G and CisLink-E2G (maximum over the set's variants
+with PIP > 0.1), the nearest-gene baseline (negative TSS distance to the highest-probability variant), the published
+methods' scores (ENCODE-rE2G, ABC, cS2G, PoPS, L2G; FLAMES on eight traits), and the leave-out flags (exome-burden
+silver gene, L2G training gene).
+
 ## Not redistributed
 
 The manuscript also evaluates CRISPR screens of bone mineral density GWAS variants in hFOB cells: CRISPRi of
-89 elements (Conery et al. 2025) and STING-seq of 332 variants (Kahlani et al. 2026), and GWAS gene-prioritization
-benchmarks (UK Biobank silver standard, github.com/Deylab999MSKCC/e2g-benchmarking). Their labels are not
-redistributed here; obtain them from the original publications.
+89 elements (Conery et al. 2025) and STING-seq of 332 variants (Kahlani et al. 2026). Their labels are not redistributed
+here; obtain them from the original publications.
 
 ## Sources
 
 - Gschwind, A. R. *et al.* An encyclopedia of enhancer–gene regulatory interactions in the human genome (ENCODE-rE2G).
+- Weeks, E. M. *et al.* (2023) Leveraging polygenic enrichments of gene features to predict genes underlying complex traits and diseases.
 - Fulco, C. P. *et al.* (2019); Nasser, J. *et al.* (2021); Morris, J. A. *et al.* (2023); Reilly, S. K. *et al.* (2021);
   Klann, T. S. *et al.* (2021); Xie, S. *et al.* (2019); Ray, J. *et al.* (2025); Guckelberger, P. *et al.* (2024).
