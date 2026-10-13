@@ -2,13 +2,12 @@
 
 ## Shipped here (`data/crispr/`)
 
-CRISPR element–gene pairs from the ENCODE CRISPR benchmark used to train and evaluate ENCODE-rE2G
-(Gschwind et al.), with CisLink's harmonized input features. ENCODE data are released without use restrictions;
+Held-out CRISPR element–gene pairs from the ENCODE CRISPR benchmark (Gschwind et al.), with CisLink's harmonized
+input features. ENCODE data are released without use restrictions;
 please cite the original studies (below) when using them.
 
 | File | Contents |
 |---|---|
-| `K562_training.features.tsv.gz` | The 10,250 K562 training pairs (469 positives): label, chromosome fold (1–5) used for tuning, element and promoter coordinates, the 38 model features |
 | `{K562,HCT116,GM12878}_heldout.pairs.tsv.gz` | Held-out pairs: label, gene, source study (K562), element–TSS distance, ENCODE-rE2G / ENCODE-rE2G Extended / ABC predictions (where available), distance baseline, and the reference CisLink scores used in the manuscript |
 | `{K562,HCT116,GM12878}_heldout.features.tsv.gz` | Feature rows of those pairs, one per element and transcript of the gene; a pair's score is the maximum over its rows |
 

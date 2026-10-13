@@ -70,7 +70,7 @@ score at which held-out K562 CRISPR pairs reach a given recall:
 | CisLink-E2G | 0.180 | 0.529 |
 | CisLink-V2G | 0.139 | 0.410 |
 
-The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 05); the 70%-recall
+The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 04); the 70%-recall
 threshold kept 64–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
 log-odds of a pair.
 
@@ -105,9 +105,8 @@ The notebooks run on the CRISPR benchmark data in `data/crispr` (see [`data/READ
 |---|---|
 | [`01_quickstart`](notebooks/01_quickstart.ipynb) | scoring, thresholds, per-feature contributions, CLI |
 | [`02_crispr_benchmark`](notebooks/02_crispr_benchmark.ipynb) | Table 1a (K562, HCT116, GM12878), paired differences with gene-clustered CIs, Table 1c (by element–TSS distance), pooled comparison |
-| [`03_retrain_models`](notebooks/03_retrain_models.ipynb) | refitting both models from the 10,250 training pairs; chromosome-fold cross-validation |
-| [`04_feature_importance`](notebooks/04_feature_importance.ipynb) | grouped permutation importance, overall and by distance (Fig. 5b,c) |
-| [`05_calibration_thresholds`](notebooks/05_calibration_thresholds.ipynb) | calibration across cell types and the recall-based thresholds |
+| [`03_feature_importance`](notebooks/03_feature_importance.ipynb) | grouped permutation importance, overall and by distance (Fig. 5b,c) |
+| [`04_calibration_thresholds`](notebooks/04_calibration_thresholds.ipynb) | calibration across cell types and the recall-based thresholds |
 
 ```bash
 pixi run lab          # open the notebooks

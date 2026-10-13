@@ -36,7 +36,3 @@ def crispr_pairs(cell: str, path=None, score: bool = True) -> pd.DataFrame:
     p["cluster"] = p.gene
     return p
 
-
-def training(path=None) -> pd.DataFrame:
-    """The 10,250 K562 CRISPR training pairs (469 positives) with features and chromosome folds."""
-    return pd.read_csv(data_dir(path) / "K562_training.features.tsv.gz", sep="\t", low_memory=False)
