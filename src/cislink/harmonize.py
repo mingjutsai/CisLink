@@ -17,7 +17,7 @@ from importlib import resources
 import numpy as np
 import pandas as pd
 
-MARKS = ("DNase", "H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1", "H3K36me3",
+MARKS = ("Accessibility", "H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1", "H3K36me3",
          "H3K27me3", "H3K27ac", "H2A.Z", "CTCF")
 Q = np.linspace(0, 1, 1001)
 HIC_EDGES = np.array([0, 5e3, 10e3, 15e3, 20e3, 30e3, 40e3, 50e3, 75e3, 100e3, 150e3, 200e3, 300e3, 400e3, 500e3, 750e3, 1e6 + 1])
@@ -26,6 +26,11 @@ HIC_EDGES = np.array([0, 5e3, 10e3, 15e3, 20e3, 30e3, 40e3, 50e3, 75e3, 100e3, 1
 def _ref(name: str) -> pd.DataFrame:
     with resources.files("cislink.reference").joinpath(name).open() as fh:
         return pd.read_csv(fh, sep="\t")
+
+
+def compat(q: pd.DataFrame) -> pd.DataFrame:
+    """Quantile tables written before accessibility was renamed ('DNase') still work."""
+    return q.rename(columns={"DNase": "Accessibility"}) if "DNase" in q and "Accessibility" not in q else q
 
 
 def k562_chromatin_quantiles() -> pd.DataFrame:
@@ -58,7 +63,8 @@ def quantile_mapper(cell_q: pd.DataFrame, ref_q: pd.DataFrame, track: str):
 def harmonize_chromatin(table: pd.DataFrame, cell_q: pd.DataFrame, enh_len, prom_len, ref_q: pd.DataFrame | None = None) -> pd.DataFrame:
     """Map every ``{track}_Enh`` / ``{track}_Prom`` sum in ``table`` onto K562. ``enh_len`` and ``prom_len``
     are the region lengths in bp (array-like, row-aligned)."""
-    ref_q = k562_chromatin_quantiles() if ref_q is None else ref_q
+    ref_q = k562_chromatin_quantiles() if ref_q is None else compat(ref_q)
+    cell_q = compat(cell_q)
     out = table.copy()
     we = np.clip(np.asarray(enh_len, float), 1, None); wp = np.clip(np.asarray(prom_len, float), 1, None)
     for m in MARKS:

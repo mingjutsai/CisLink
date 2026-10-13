@@ -5,8 +5,8 @@
  "features": [
   "Tx_expression",
   "Gene_expression",
-  "DNase_Enh",
-  "DNase_Prom",
+  "Accessibility_Enh",
+  "Accessibility_Prom",
   "H4K20me1_Enh",
   "H4K20me1_Prom",
   "H3K9me3_Enh",

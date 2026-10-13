@@ -72,3 +72,10 @@ def test_score_and_cli(tmp_path):
     t = pd.read_csv(out, sep="\t")
     assert list(t.columns[:3]) == ["ID", "CisLink-E2G", "CisLink-E2G >= 70% recall threshold"]
     assert np.allclose(t["CisLink-E2G"], s["CisLink-E2G"], atol=1e-6)
+
+
+def test_legacy_accessibility_columns():
+    x = pd.read_csv("examples/example_features.tsv", sep="\t")
+    old = x.rename(columns={"Accessibility_Enh": "DNase_Enh", "Accessibility_Prom": "DNase_Prom"})
+    for m in MODELS:
+        assert np.array_equal(load_model(m).predict(x), load_model(m).predict(old))
