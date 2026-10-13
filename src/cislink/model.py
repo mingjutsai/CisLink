@@ -20,6 +20,8 @@ import pandas as pd
 MODELS = ("e2g", "v2g")
 # Hi-C contact is missing where a map has no record; the models were trained with these filled by 0.
 FILL_ZERO = ("HiC_Contact", "HiC_megamap_oe")
+# earlier column names still accepted (accessibility was called DNase, though ATAC-seq works as well)
+LEGACY = {"Accessibility_Enh": "DNase_Enh", "Accessibility_Prom": "DNase_Prom"}
 
 
 def slog(x: np.ndarray) -> np.ndarray:
@@ -47,6 +49,7 @@ class CisLinkModel:
 
     def matrix(self, table: pd.DataFrame) -> np.ndarray:
         """The model's input matrix from a feature table, with the checks applied before scoring."""
+        table = table.rename(columns={old: new for new, old in LEGACY.items() if new not in table.columns and old in table.columns})
         missing = [f for f in self.features if f not in table.columns]
         if missing:
             raise KeyError(f"{self.name}: missing feature columns {missing}")

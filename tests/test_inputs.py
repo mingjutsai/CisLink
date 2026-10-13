@@ -25,7 +25,7 @@ def cfg(tmp_path):
     pd.DataFrame({"gene_id": ["G1.1", "G2.1"], "TPM": [15.0, 2.0]}).to_csv(tmp_path / "g.tsv", sep="\t", index=False)
     (tmp_path / "cand.bed").write_text("chr1\t9000\t11000\t5\n")
     return {"gtf": str(gtf), "transcript_quantification": str(tmp_path / "tx.tsv"), "gene_quantification": str(tmp_path / "g.tsv"),
-            "tracks": {"DNase": write_bedgraph(tmp_path / "d.bedGraph"), "H3K27ac": write_bedgraph(tmp_path / "k.bedGraph")},
+            "tracks": {"accessibility": write_bedgraph(tmp_path / "d.bedGraph"), "H3K27ac": write_bedgraph(tmp_path / "k.bedGraph")},
             "candidates": str(tmp_path / "cand.bed"), "dir": tmp_path}
 
 
@@ -56,9 +56,9 @@ def test_read_variants(tmp_path):
 @needs_bedtools
 def test_bare_chromosome_tracks_give_the_same_signal(tmp_path):
     regions = pd.DataFrame({"chrom": ["chr1"] * 3, "start": [9750, 39750, 70000], "end": [10250, 40250, 70500]})
-    s = cf.signal_sums(regions, {"DNase": write_bedgraph(tmp_path / "chr.bg"), "H3K27ac": write_bedgraph(tmp_path / "bare.bg", bare=True)})
+    s = cf.signal_sums(regions, {"ATAC": write_bedgraph(tmp_path / "chr.bg"), "H3K27ac": write_bedgraph(tmp_path / "bare.bg", bare=True)})
     expected = [manual_sum(a, b) for a, b in zip(regions.start, regions.end)]
-    assert np.allclose(s.DNase, expected) and np.allclose(s.H3K27ac, expected)
+    assert np.allclose(s.Accessibility, expected) and np.allclose(s.H3K27ac, expected)
 
 
 def test_variant_chromosomes_follow_the_annotation(cfg):
@@ -70,12 +70,12 @@ def test_variant_chromosomes_follow_the_annotation(cfg):
 @needs_bedtools
 def test_preflight_accepts_and_rejects(cfg, tmp_path):
     info = ci.preflight(cfg, pd.DataFrame({"SNPID": ["v"], "chr": ["1"], "pos": [40250]}), log=lambda s: None)
-    assert info["gtf_chr_prefix"] is True and info["track_chr_prefix"] == {"DNase": True, "H3K27ac": True}
+    assert info["gtf_chr_prefix"] is True and info["track_chr_prefix"] == {"Accessibility": True, "H3K27ac": True}
     bad = dict(cfg, tracks={**cfg["tracks"], "H3K27ac": write_bedgraph(tmp_path / "bare.bg", bare=True)})
     with pytest.raises(ci.InputError, match="disagree on chromosome naming"):
         ci.preflight(bad, log=lambda s: None)
     with pytest.raises(ci.InputError, match="unknown track names"):
-        ci.preflight(dict(cfg, tracks={**cfg["tracks"], "H3K27Ac": cfg["tracks"]["DNase"]}), log=lambda s: None)
+        ci.preflight(dict(cfg, tracks={**cfg["tracks"], "H3K27Ac": cfg["tracks"]["accessibility"]}), log=lambda s: None)
     with pytest.raises(ci.InputError, match="accessibility track"):
         ci.preflight(dict(cfg, tracks={"H3K27ac": cfg["tracks"]["H3K27ac"]}), log=lambda s: None)
     (tmp_path / "none.tsv").write_text("ENST999.1\t1.0\n")

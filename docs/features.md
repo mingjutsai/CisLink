@@ -3,12 +3,13 @@
 Both models take one row per element–gene (or variant–gene) pair with the columns below. Signals are summed over the
 element (or the ±250-bp variant window) and over a ±250-bp promoter window around each GENCODE v29 TSS, then
 harmonized to the K562 scale (`cislink.harmonize`). E2G uses all 37 features; V2G uses the 13 with a V2G coefficient.
-Missing Hi-C contact is treated as 0; any other missing value is an error.
+Missing Hi-C contact is treated as 0; any other missing value is an error. Accessibility comes from ATAC-seq or DNase-seq;
+the earlier column names `DNase_Enh` and `DNase_Prom` are still accepted.
 
 | Column | Label | Group | Definition | Harmonization | E2G coef. | V2G coef. |
 |---|---|---|---|---|---|---|
-| `DNase_Enh` | Accessibility (element) | accessibility | accessibility (DNase-seq or ATAC-seq) summed over the element | quantile-mapped to K562 over genome-wide candidate elements | +0.620 | +1.212 |
-| `DNase_Prom` | Accessibility (promoter) | accessibility | accessibility over the ±250-bp promoter window | quantile-mapped to K562 over genome-wide candidate elements | -0.140 | -0.478 |
+| `Accessibility_Enh` | Accessibility (element) | accessibility | accessibility (DNase-seq or ATAC-seq) summed over the element | quantile-mapped to K562 over genome-wide candidate elements | +0.620 | +1.212 |
+| `Accessibility_Prom` | Accessibility (promoter) | accessibility | accessibility over the ±250-bp promoter window | quantile-mapped to K562 over genome-wide candidate elements | -0.140 | -0.478 |
 | `Tx_expression` | Transcript expression | expression | expression (TPM over protein-coding transcripts) of the gene's transcript | recomputed over protein-coding transcripts | +0.153 | +0.156 |
 | `Gene_expression` | Gene expression | expression | gene expression (TPM, protein-coding) | recomputed over protein-coding transcripts | -0.266 | -0.304 |
 | `HiC_megamap_oe` | Hi-C contact (megamap) | contact | observed/expected contact in the multi-tissue megamap, 5 kb | nan |  | +0.202 |

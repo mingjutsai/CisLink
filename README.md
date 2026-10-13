@@ -94,7 +94,7 @@ in the package:
 from cislink import harmonize as hz
 
 # chromatin: per-bp mean signal over the cell's genome-wide candidate elements -> 1,001 quantiles per track
-cell_q = hz.chromatin_quantiles({"DNase": dnase_means, "H3K27ac": h3k27ac_means})
+cell_q = hz.chromatin_quantiles({"Accessibility": atac_means, "H3K27ac": h3k27ac_means})
 x = hz.harmonize_chromatin(x, cell_q, enh_len=enh_lengths, prom_len=prom_lengths)
 
 # expression: protein-coding TPM

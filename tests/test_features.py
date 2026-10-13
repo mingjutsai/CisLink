@@ -77,8 +77,8 @@ REGIONS = pd.DataFrame({"chrom": ["chr1"] * 3, "start": [9750, 39750, 70000], "e
 
 @pytest.mark.skipif(shutil.which("bedtools") is None, reason="bedtools not installed")
 def test_signal_sums_bedgraph(inputs):
-    s = cf.signal_sums(REGIONS, {"DNase": str(inputs["bedgraph"])})
-    assert np.allclose(s.DNase, [manual_sum(a, b) for a, b in zip(REGIONS.start, REGIONS.end)])
+    s = cf.signal_sums(REGIONS, {"accessibility": str(inputs["bedgraph"])})
+    assert np.allclose(s.Accessibility, [manual_sum(a, b) for a, b in zip(REGIONS.start, REGIONS.end)])
     assert s.H3K27ac.isna().all()
 
 
@@ -88,8 +88,8 @@ def test_signal_sums_bigwig(inputs):
     bw = pbw.open(path, "w"); bw.addHeader([("chr1", 100000)])
     bw.addEntries(["chr1"] * len(BEDGRAPH), [a for _, a, _, _ in BEDGRAPH], ends=[b for _, _, b, _ in BEDGRAPH], values=[v for *_, v in BEDGRAPH])
     bw.close()
-    s = cf.signal_sums(REGIONS, {"DNase": path})
-    assert np.allclose(s.DNase, [manual_sum(a, b) for a, b in zip(REGIONS.start, REGIONS.end)])
+    s = cf.signal_sums(REGIONS, {"DNase": path})   # earlier name still accepted
+    assert np.allclose(s.Accessibility, [manual_sum(a, b) for a, b in zip(REGIONS.start, REGIONS.end)])
 
 
 @pytest.mark.skipif(shutil.which("bedtools") is None, reason="bedtools not installed")
