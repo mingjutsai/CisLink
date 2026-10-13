@@ -3,8 +3,8 @@
  "description": "Variant-to-gene model: accessibility, expression, multi-tissue Hi-C megamap, distance and gene context; scores every variant window.",
  "version": "1.0.0",
  "features": [
-  "DNase_Enh",
-  "DNase_Prom",
+  "Accessibility_Enh",
+  "Accessibility_Prom",
   "Tx_expression",
   "Gene_expression",
   "HiC_megamap_oe",
