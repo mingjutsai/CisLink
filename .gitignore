@@ -1,0 +1,9 @@
+.pixi/
+__pycache__/
+*.egg-info/
+dist/
+build/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+scores.tsv
