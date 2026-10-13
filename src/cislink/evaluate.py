@@ -12,7 +12,7 @@ from sklearn.metrics import average_precision_score
 B, SEED = 1000, 0
 DISTANCE_BINS = ((0, 1e4, "<10 kb"), (1e4, 5e4, "10-50 kb"), (5e4, 2e5, "50-200 kb"), (2e5, np.inf, ">200 kb"))
 GROUPS = {
-    "accessibility": ["DNase_Enh", "DNase_Prom"],
+    "accessibility": ["Accessibility_Enh", "Accessibility_Prom"],
     "histone marks": [f"{m}_{p}" for m in ("H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1",
                                            "H3K36me3", "H3K27me3", "H3K27ac", "H2A.Z") for p in ("Enh", "Prom")],
     "CTCF": ["CTCF_Enh", "CTCF_Prom"],

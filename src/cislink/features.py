@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 
 from . import harmonize as hz
-from .inputs import chr_prefix, format_chr, read_expression, read_expression_raw
+from .inputs import chr_prefix, format_chr, normalize_tracks, read_expression, read_expression_raw
 
 MARKS = hz.MARKS
 ELEMENT_HALF_WIDTH = 250
@@ -167,6 +167,7 @@ def _sums_bedgraph(n_regions: int, bed: str, path, bedtools: str, tmp: str, tag:
 
 def signal_sums(regions: pd.DataFrame, tracks: dict[str, str], bedtools: str = "bedtools", threads: int = 4) -> pd.DataFrame:
     """sum(signal x overlapping bp) per region (columns chrom, start, end) for each track; NaN for marks without a track."""
+    tracks = normalize_tracks(tracks)
     reg = regions[["chrom", "start", "end"]].drop_duplicates().reset_index(drop=True)
     with tempfile.TemporaryDirectory(prefix="cislink_") as tmp:
         # region files are written before the parallel step and only read there, one per chromosome naming
@@ -288,6 +289,7 @@ def make_candidates(accessibility_pvalue_bedgraph, out, bedtools: str = "bedtool
 
 def cell_chromatin_quantiles(candidates_bed, tracks: dict[str, str], bedtools: str = "bedtools", threads: int = 4) -> pd.DataFrame:
     """Quantiles of each track's per-bp mean signal over the cell's candidate elements."""
+    tracks = normalize_tracks(tracks)
     cand = pd.read_csv(candidates_bed, sep="\t", header=None, usecols=[0, 1, 2], names=["chrom", "start", "end"])
     reg = cand.drop_duplicates().reset_index(drop=True)
     sums = signal_sums(reg, tracks, bedtools, threads)
@@ -327,6 +329,9 @@ def build_features(rows: pd.DataFrame, *, gtf, tracks: dict[str, str], transcrip
     ``hic``: the cell's .hic for CisLink-E2G (omit for V2G only). ``map_hic``: map the cell's O/E onto K562 within
     distance strata (default; the manuscript did this for the lab's 2-2.5-kb maps). ``megamap``: .hic path or URL of
     the multi-tissue megamap for CisLink-V2G (``None`` to skip)."""
+    tracks = normalize_tracks(tracks)
+    if cell_quantiles is not None:
+        cell_quantiles = hz.compat(cell_quantiles)
     transcripts, genes = read_gtf(gtf)
     out = rows[["ID", "chrom", "es", "ee", "ps", "pe", "gene", "TX"]].copy()
     out["Enh"] = out.chrom + ":" + out.es.astype(str) + ":" + out.ee.astype(str)

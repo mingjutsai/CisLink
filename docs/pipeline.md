@@ -17,7 +17,7 @@ pixi run -e pipeline cislink build --help
 | Input | Used for | Format |
 |---|---|---|
 | GENCODE annotation (v29 in the manuscript) | candidate transcripts and genes, gene context | GTF (`.gtf` or `.gtf.gz`) |
-| Chromatin tracks: accessibility (`DNase`, ATAC-seq or DNase-seq), 11 histone marks, `CTCF` | `{mark}_Enh`, `{mark}_Prom` | bedGraph (through `bedtools`) or bigWig; signal or -log10 P, as the cell's tracks come |
+| Chromatin tracks: `accessibility` (ATAC-seq or DNase-seq), 11 histone marks, `CTCF` | `{mark}_Enh`, `{mark}_Prom` | bedGraph (through `bedtools`) or bigWig; signal or -log10 P, as the cell's tracks come |
 | Candidate elements of the cell | quantile mapping of chromatin to K562 | BED (chrom, start, end, activity), or an accessibility -log10 P bedGraph to call them |
 | Transcript and gene quantifications | `Tx_expression`, `Gene_expression` | ENCODE RSEM TSVs (`transcript_id` / `gene_id`, `TPM`) |
 | The cell's Hi-C (CisLink-E2G only) | `HiC_Contact` | `.hic` |
@@ -41,7 +41,7 @@ converted to the annotation's convention internally. This matters because a bedG
 `chr1` regions would otherwise give all-zero signal without an error. bedGraph tracks must agree with each other.
 
 `cislink validate` runs the same preflight that `cislink build` runs first: required keys, readable files, track
-names (`DNase` = accessibility is required), the first data row of each bedGraph, chromosome naming, bedtools, the
+names (an `accessibility` track is required; `DNase` and `ATAC` are accepted as its name), the first data row of each bedGraph, chromosome naming, bedtools, the
 stable Ensembl IDs shared by the annotation and the expression tables, duplicated variant IDs, and element
 coordinates. Problems are reported before any long step starts.
 
@@ -57,7 +57,7 @@ gtf: gencode.v29.annotation.gtf
 transcript_quantification: osteoblast_RNAseq_transcripts.tsv
 gene_quantification: osteoblast_RNAseq_genes.tsv
 tracks:
-  DNase: osteoblast_ATAC_pval.bedGraph      # accessibility, ATAC-seq or DNase-seq
+  accessibility: osteoblast_ATAC_pval.bedGraph   # ATAC-seq or DNase-seq
   H3K27ac: osteoblast_H3K27ac.bigWig
   H3K4me1: osteoblast_H3K4me1.bigWig
   # ... H4K20me1, H3K9me3, H3K9ac, H3K79me2, H3K4me3, H3K4me2, H3K36me3, H3K27me3, H2A.Z, CTCF

@@ -3,7 +3,7 @@ gtf: gencode.v29.annotation.gtf
 transcript_quantification: RNAseq_transcript_quantifications.tsv   # ENCODE RSEM: transcript_id, TPM
 gene_quantification: RNAseq_gene_quantifications.tsv               # ENCODE RSEM: gene_id, TPM
 tracks:                       # bedGraph or bigWig; any subset (missing marks are left empty)
-  DNase: ATAC_pval.bedGraph   # accessibility: ATAC-seq or DNase-seq
+  accessibility: ATAC_pval.bedGraph   # ATAC-seq or DNase-seq
   H4K20me1: H4K20me1.bigWig
   H3K9me3: H3K9me3.bigWig
   H3K9ac: H3K9ac.bigWig

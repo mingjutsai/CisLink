@@ -12,8 +12,16 @@ import shutil
 
 import pandas as pd
 
-MARKS = ("DNase", "H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1", "H3K36me3",
+MARKS = ("Accessibility", "H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1", "H3K36me3",
          "H3K27me3", "H3K27ac", "H2A.Z", "CTCF")
+
+
+ACCESSIBILITY_KEYS = {"accessibility", "dnase", "atac", "dnase-seq", "atac-seq"}
+
+
+def normalize_tracks(tracks: dict) -> dict:
+    """Track names as used internally: 'accessibility', 'DNase' or 'ATAC' (any case) become 'Accessibility'."""
+    return {("Accessibility" if str(k).lower() in ACCESSIBILITY_KEYS else k): v for k, v in tracks.items()}
 
 
 def normalize_ensembl_id(identifier: str) -> str:
@@ -123,12 +131,12 @@ def preflight(cfg: dict, variants: pd.DataFrame | None = None, elements: pd.Data
     if not (cfg.get("chromatin_quantiles") or cfg.get("candidates") or cfg.get("accessibility_pvalue")):
         raise InputError("give 'candidates' (BED), 'accessibility_pvalue' (bedGraph to call them) or 'chromatin_quantiles'")
 
-    tracks = cfg["tracks"]
+    tracks = normalize_tracks(cfg["tracks"])
     unknown = [m for m in tracks if m not in MARKS]
     if unknown:
         raise InputError(f"unknown track names {unknown}; use {list(MARKS)}")
-    if "DNase" not in tracks:
-        raise InputError("an accessibility track ('DNase': ATAC-seq or DNase-seq) is required")
+    if "Accessibility" not in tracks:
+        raise InputError("an accessibility track ('accessibility': ATAC-seq or DNase-seq) is required")
     prefixes = {}
     for m, p in tracks.items():
         if not os.path.isfile(p):
