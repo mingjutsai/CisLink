@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cislink"
+version = "1.0.0"
+description = "General models linking noncoding variants (CisLink-V2G) and cis-regulatory elements (CisLink-E2G) to their target genes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Ming-Ju Tsai" }, { name = "Yi-Hsiang Hsu" }]
+dependencies = ["numpy>=1.23", "pandas>=1.5", "scikit-learn>=1.2"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+
+[project.optional-dependencies]
+notebooks = ["matplotlib>=3.6", "jupyter", "nbclient", "nbformat", "ipykernel"]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[project.scripts]
+cislink = "cislink.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cislink"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/cislink", "tests", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 160
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E731", "E402", "E701", "E702"]
+
+# ---------------------------------------------------------------- pixi
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[tool.pixi.dependencies]
+python = ">=3.10,<3.14"
+numpy = ">=1.23"
+pandas = ">=1.5"
+scikit-learn = ">=1.2"
+
+[tool.pixi.pypi-dependencies]
+cislink = { path = ".", editable = true }
+
+[tool.pixi.feature.dev.dependencies]
+pytest = ">=7"
+ruff = ">=0.4"
+
+[tool.pixi.feature.notebooks.dependencies]
+matplotlib = ">=3.6"
+jupyterlab = "*"
+nbclient = "*"
+nbformat = "*"
+ipykernel = "*"
+
+[tool.pixi.feature.build.dependencies]
+python-build = "*"
+hatchling = ">=1.21"
+
+[tool.pixi.feature.py310.dependencies]
+python = "3.10.*"
+
+[tool.pixi.feature.py312.dependencies]
+python = "3.12.*"
+
+[tool.pixi.environments]
+default = { features = ["dev", "notebooks"], solve-group = "default" }
+py310 = { features = ["dev", "py310"] }
+py312 = { features = ["dev", "py312"] }
+build = { features = ["build"], no-default-feature = false }
+
+[tool.pixi.tasks]
+test = "pytest -q"
+lint = "ruff check src tests notebooks"
+notebooks = "python tools/run_notebooks.py"
+lab = "jupyter lab notebooks"
+
+[tool.pixi.feature.build.tasks]
+build = "python -m build --no-isolation"
