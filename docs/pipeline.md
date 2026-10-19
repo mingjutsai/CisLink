@@ -12,6 +12,24 @@ pixi install -e pipeline        # adds bedtools, pyBigWig, hic-straw, PyYAML (Li
 pixi run -e pipeline cislink build --help
 ```
 
+## Accessibility from a BAM
+
+The models read accessibility as a MACS2 -log10 P track (ENCODE's ATAC-seq "signal p-value", or a Roadmap DNase
+p-value track). When a cell has only aligned reads, `cislink pvalue` makes that track from the BAM as the ENCODE
+ATAC-seq pipeline does: filtered, deduplicated reads; cut sites (Tn5 insertion for ATAC-seq, 5' end for DNase-seq);
+`macs2 callpeak -f BED --nomodel --shift -75 --extsize 150 --keep-dup all -B --SPMR -p 0.01` without a control; and
+`macs2 bdgcmp -m ppois -S <cut sites / 1e6>`.
+
+```bash
+pixi install -e macs2           # MACS2 2.2.7.1 (Linux, macOS x86-64)
+pixi run -e pipeline cislink pvalue sample.nodup.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
+```
+
+Duplicates are marked first when the BAM header shows no marking step (`--mark-duplicates auto`). On osteoblast
+ATAC-seq the result agrees with the ENCODE pipeline's own p-value track (Spearman 0.996 over the candidate elements);
+on myotube ATAC-seq it reproduces the track used in the manuscript (element Spearman 0.99999).
+Use the track as `accessibility` and as `accessibility_pvalue` in the configuration.
+
 ## Inputs (GRCh38)
 
 | Input | Used for | Format |
