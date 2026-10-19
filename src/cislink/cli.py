@@ -1,4 +1,4 @@
-"""Command line: ``cislink validate``, ``cislink build``, ``cislink score``, ``cislink rank`` and ``cislink info``."""
+"""Command line: ``cislink pvalue``, ``cislink validate``, ``cislink build``, ``cislink score``, ``cislink rank`` and ``cislink info``."""
 from __future__ import annotations
 
 import argparse
@@ -97,6 +97,14 @@ def _build(a) -> int:
     return 0
 
 
+def _pvalue(a) -> int:
+    from .pvalue import pvalue_track
+    log = lambda s: print(s, file=sys.stderr, flush=True)  # noqa: E731
+    pvalue_track(a.bam, a.output, assay=a.assay, mapq=a.mapq, mark_dups=a.mark_duplicates, macs2=a.macs2,
+                 samtools=a.samtools, bedtools=a.bedtools, threads=a.threads, log=log)
+    return 0
+
+
 def _rank(a) -> int:
     """Pair scores (maximum over a gene's transcript rows) and gene ranks per variant or element."""
     t = pd.read_csv(a.input, sep="\t", low_memory=False)
@@ -151,6 +159,15 @@ def main(argv=None) -> int:
     b.add_argument("--score", action="store_true", help="also add CisLink-V2G (and CisLink-E2G when the config has Hi-C) scores")
     b.add_argument("-o", "--output", required=True)
     b.set_defaults(func=_build)
+    pv = sub.add_parser("pvalue", help="accessibility -log10 P track from an ATAC-seq or DNase-seq BAM (see docs/pipeline.md)")
+    pv.add_argument("bam"); pv.add_argument("-o", "--output", required=True, help="bedGraph, or .bw/.bigWig (needs pyBigWig)")
+    pv.add_argument("--assay", choices=("atac", "dnase"), required=True, help="ATAC: Tn5 insertion (+4/-5); DNase: 5' end")
+    pv.add_argument("--mapq", type=int, default=0, help="minimum mapping quality (default 0: the BAM's own filtering)")
+    pv.add_argument("--mark-duplicates", choices=("auto", "yes", "no"), default="auto",
+                    help="mark duplicates first: auto = when the BAM header shows no marking step")
+    pv.add_argument("--macs2", default="macs2", help="MACS2 2.2.7.1 executable (pixi install -e macs2: .pixi/envs/macs2/bin/macs2)")
+    pv.add_argument("--threads", type=int, default=4); pv.add_argument("--samtools", default="samtools"); pv.add_argument("--bedtools", default="bedtools")
+    pv.set_defaults(func=_pvalue)
     r = sub.add_parser("rank", help="pair scores and gene ranks per variant or element from a scored table")
     r.add_argument("input"); r.add_argument("-o", "--output", help="output TSV (default stdout)")
     r.set_defaults(func=_rank)

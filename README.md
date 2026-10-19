@@ -82,6 +82,8 @@ manuscript's matrices exactly; see [`docs/pipeline.md`](docs/pipeline.md) and `e
 
 ```bash
 pixi install -e pipeline
+# only aligned reads? make the accessibility -log10 P track first (pixi install -e macs2; see docs/pipeline.md)
+pixi run -e pipeline cislink pvalue sample.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
 pixi run -e pipeline cislink validate --variants variants.tsv --config my_cell.yaml   # preflight
 pixi run -e pipeline cislink build --variants variants.tsv --config my_cell.yaml --score -o features.tsv
 pixi run cislink rank features.tsv -o genes.tsv
