@@ -71,7 +71,7 @@ score at which held-out K562 CRISPR pairs reach a given recall:
 | CisLink-V2G | 0.139 | 0.410 |
 
 The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 04); the 70%-recall
-threshold kept 64–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
+threshold kept 53–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
 log-odds of a pair.
 
 ### 3. Build features for a new cell type
@@ -84,6 +84,7 @@ manuscript's matrices exactly; see [`docs/pipeline.md`](docs/pipeline.md) and `e
 pixi install -e pipeline
 # only aligned reads? make the accessibility -log10 P track first (pixi install -e macs2; see docs/pipeline.md)
 pixi run -e pipeline cislink pvalue sample.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
+# DNase-seq uses the Roadmap procedure and its uniform control (cislink roadmap-control): --assay dnase --control ...
 pixi run -e pipeline cislink validate --variants variants.tsv --config my_cell.yaml   # preflight
 pixi run -e pipeline cislink build --variants variants.tsv --config my_cell.yaml --score -o features.tsv
 pixi run cislink rank features.tsv -o genes.tsv
@@ -117,7 +118,7 @@ The notebooks run on the data in `data/` (see [`data/README.md`](data/README.md)
 | Notebook | Reproduces |
 |---|---|
 | [`01_quickstart`](notebooks/01_quickstart.ipynb) | scoring, thresholds, per-feature contributions, CLI |
-| [`02_crispr_benchmark`](notebooks/02_crispr_benchmark.ipynb) | Table 1a (K562, HCT116, GM12878), paired differences with gene-clustered CIs, Table 1c (by element–TSS distance), pooled comparison |
+| [`02_crispr_benchmark`](notebooks/02_crispr_benchmark.ipynb) | Table 1a (K562, HCT116, GM12878, WTC11), paired differences with gene-clustered CIs, Table 1c (by element–TSS distance), pooled comparison |
 | [`03_feature_importance`](notebooks/03_feature_importance.ipynb) | grouped permutation importance, overall and by distance (Fig. 5b,c) |
 | [`04_calibration_thresholds`](notebooks/04_calibration_thresholds.ipynb) | calibration across cell types and the recall-based thresholds |
 | [`05_gwas_silver_standard`](notebooks/05_gwas_silver_standard.ipynb) | 568 credible sets for 31 traits: top-1 and MRR (Fig. 3a), by trait (3b), locus-level precision–recall without L2G's training genes (3c), nearest versus non-nearest sets (3d), gene–locus pairs against the nearest gene |
@@ -129,7 +130,7 @@ pixi run notebooks    # re-execute all of them
 
 Key results: on held-out K562 CRISPR pairs, CisLink-E2G AUPRC 0.688 (ENCODE-rE2G Extended 0.678, CisLink-V2G 0.578,
 distance 0.366), and 0.683 against 0.158 for distance 50–200 kb from the TSS; on the 568 silver-standard credible
-sets, CisLink-V2G ranks the silver gene first in 52.6% (nearest gene 51.8%, L2G 45.1%, PoPS 37.1%, ENCODE-rE2G 16.5%).
+sets, CisLink-V2G ranks the silver gene first in 53.3% (nearest gene 52.9%, L2G 44.7%, PoPS 37.2%, ENCODE-rE2G 16.4%).
 
 ## Development
 

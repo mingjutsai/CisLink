@@ -92,6 +92,7 @@ platforms = ["linux-64", "osx-64"]
 [tool.pixi.feature.macs2.dependencies]
 python = "3.8.*"
 macs2 = "2.2.7.1.*"
+crossmap = ">=0.6"   # lifts Roadmap's uniform DNase control to GRCh38 (cislink roadmap-control)
 
 [tool.pixi.feature.notebooks.dependencies]
 matplotlib = ">=3.6"

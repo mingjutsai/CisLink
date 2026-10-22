@@ -36,13 +36,30 @@ def test_matches_sklearn_pipeline():
         assert np.allclose(pipe.predict_proba(x.values)[:, 1], load_model(m).predict(x), atol=1e-12)
 
 
-@pytest.mark.parametrize("cell", ["K562", "HCT116", "GM12878"])
+@pytest.mark.parametrize("cell", ["K562", "HCT116", "GM12878", "WTC11"])
 def test_reproduces_reference_scores(cell):
     p = pd.read_csv(f"{DATA}/{cell}_heldout.pairs.tsv.gz", sep="\t")
     f = pd.read_csv(f"{DATA}/{cell}_heldout.features.tsv.gz", sep="\t")
     for m, ref in (("e2g", "reference CisLink-E2G"), ("v2g", "reference CisLink-V2G")):
+        if p[ref].isna().all():   # WTC11: no histone marks, CisLink-E2G not scored
+            continue
         s = pd.Series(load_model(m).predict(f), index=f.ID).groupby(level=0).max()
         assert np.allclose(p.ID.map(s).values, p[ref].values, atol=1e-5)
+
+
+def test_crispr_manuscript_numbers():
+    """Table 1a AUPRC of the cells outside K562, from the shipped feature rows."""
+    from sklearn.metrics import average_precision_score as ap
+
+    from cislink import datasets
+    want = {"HCT116": (0.746, 0.525), "GM12878": (0.912, 0.852), "WTC11": (None, 0.447)}
+    for cell, (e2g, v2g) in want.items():
+        p = datasets.crispr_pairs(cell, path=DATA)
+        assert round(ap(p.label, p["CisLink-V2G"]), 3) == v2g
+        if e2g is None:
+            assert p["CisLink-E2G"].isna().all()
+        else:
+            assert round(ap(p.label, p["CisLink-E2G"]), 3) == e2g
 
 
 def test_missing_feature_raises():
