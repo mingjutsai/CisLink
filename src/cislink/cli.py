@@ -170,7 +170,8 @@ def main(argv=None) -> int:
     b.add_argument("-o", "--output", required=True)
     b.set_defaults(func=_build)
     pv = sub.add_parser("pvalue", help="accessibility -log10 P track from an ATAC-seq or DNase-seq BAM (see docs/pipeline.md)")
-    pv.add_argument("bam"); pv.add_argument("-o", "--output", required=True, help="bedGraph, or .bw/.bigWig (needs pyBigWig)")
+    pv.add_argument("bam", nargs="+", help="BAM file(s); biological replicates are pooled")
+    pv.add_argument("-o", "--output", required=True, help="bedGraph, or .bw/.bigWig (needs pyBigWig)")
     pv.add_argument("--assay", choices=("atac", "dnase"), required=True,
                     help="atac: ENCODE ATAC procedure (Tn5 insertions); dnase: Roadmap procedure (36-bp tags, uniform control)")
     pv.add_argument("--control", help="DNase only: Roadmap uniform control BED on GRCh38 (cislink roadmap-control)")

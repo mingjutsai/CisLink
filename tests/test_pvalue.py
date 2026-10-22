@@ -89,3 +89,24 @@ def test_roadmap_dnase_read1_only_and_subsample(tmp_path):
 def test_dnase_needs_control(tmp_path):
     with pytest.raises(ValueError, match="control"):
         pv.pvalue_track(tmp_path / "x.bam", tmp_path / "x.bedGraph", assay="dnase")
+
+
+@needs_tools
+@needs_macs2
+def test_replicates_are_pooled(tmp_path):
+    reads = [(f"p{i}", 0 if i % 2 else 16, 50001 + (i % 40), 50, 60) for i in range(100)]
+    (tmp_path / "a").mkdir(); (tmp_path / "b").mkdir()
+    a, b = sam(tmp_path / "a", reads), sam(tmp_path / "b", reads)
+    r = pv.pvalue_track([a, b], tmp_path / "acc.bedGraph", assay="atac", mark_dups="no", macs2=MACS2, log=lambda s: None)
+    assert r["cut_sites"] == 200
+
+
+def test_pool_and_cap(tmp_path):
+    parts = []
+    for i in range(2):
+        p = tmp_path / f"t{i}.bed"; p.write_text("".join(f"chr1\t{j}\t{j + 36}\tN\t1000\t+\n" for j in range(i * 10, i * 10 + 10))); parts.append(str(p))
+    assert pv._pool_and_cap(parts, tmp_path / "all.bed", None) == 20
+    parts = []
+    for i in range(2):
+        p = tmp_path / f"u{i}.bed"; p.write_text("".join(f"chr1\t{j}\t{j + 36}\tN\t1000\t+\n" for j in range(i * 10, i * 10 + 10))); parts.append(str(p))
+    assert pv._pool_and_cap(parts, tmp_path / "cap.bed", 15) == 15 and len((tmp_path / "cap.bed").read_text().splitlines()) == 15
