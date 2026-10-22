@@ -19,8 +19,8 @@ tracks:                       # bedGraph or bigWig; any subset (missing marks ar
 candidates: candidates.bed    # chrom, start, end, activity; or set accessibility_pvalue: ATAC_pval.bedGraph instead
 hic: cell.hic                 # the cell's Hi-C for CisLink-E2G; omit for CisLink-V2G only
 hic_resolution: 5000
-hic_norm: KR
-map_hic: true
+hic_norm: KR             # SCALE for ENCODE intact Hi-C
+# map_hic: false         # default: true only when hic_resolution < 5000 (finer than the training maps)
 # megamap: https://s3.us-central-1.wasabisys.com/aiden-encode-hic-mirror/bifocals_iter2/tissues.hic   (default)
 # chromatin_quantiles: OUT.chromatin_quantiles.tsv   # reuse the cell's quantiles saved by a first run
 # hic_quantiles: OUT.hic_quantiles.tsv

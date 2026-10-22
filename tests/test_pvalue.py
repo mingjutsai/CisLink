@@ -65,3 +65,27 @@ def test_pvalue_track_peaks_over_background(tmp_path):
     assert r["cut_sites"] == 500 and set(t.c) == {"chr1"} and t.e.max() <= 100000
     peak = t[(t.s <= 50050) & (t.e > 50050)].v.max()
     assert peak > 10 and peak > 10 * t[(t.e < 40000)].v.median()
+
+
+@needs_tools
+def test_roadmap_dnase_tags(tmp_path):
+    """Roadmap DNase tags: 5' 36 bp, MAPQ >= 30, duplicate-flagged and secondary reads dropped."""
+    reads = [("p", 0, 1001, 50, 60), ("m", 16, 2001, 50, 60), ("low", 0, 5001, 50, 20), ("dup", 1024, 7001, 50, 60), ("sec", 256, 9001, 50, 60)]
+    b = sam(tmp_path, reads)
+    n = pv.roadmap_tags(b, tmp_path / "t.bed", pv.chrom_sizes(b))
+    t = bed(tmp_path / "t.bed").sort_values("s")
+    assert n == 2 and list(t.s) == [1000, 2014] and list(t.e) == [1036, 2050]   # plus: 5' start; minus: 5' end
+
+
+@needs_tools
+def test_roadmap_dnase_read1_only_and_subsample(tmp_path):
+    reads = [("a", 65, 1001, 50, 60), ("a", 129, 1201, 50, 60), ("b", 65, 3001, 50, 60), ("b", 129, 3201, 50, 60), ("c", 0, 5001, 50, 60)]
+    b = sam(tmp_path, reads)
+    assert pv.roadmap_tags(b, tmp_path / "t.bed", pv.chrom_sizes(b)) == 2            # paired BAM: read 1 (flag 64) only
+    assert list(bed(tmp_path / "t.bed").sort_values("s").s) == [1000, 3000]
+    assert pv.roadmap_tags(b, tmp_path / "u.bed", pv.chrom_sizes(b), max_tags=1) == 1   # subsample
+
+
+def test_dnase_needs_control(tmp_path):
+    with pytest.raises(ValueError, match="control"):
+        pv.pvalue_track(tmp_path / "x.bam", tmp_path / "x.bedGraph", assay="dnase")

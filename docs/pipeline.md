@@ -14,21 +14,47 @@ pixi run -e pipeline cislink build --help
 
 ## Accessibility from a BAM
 
-The models read accessibility as a MACS2 -log10 P track (ENCODE's ATAC-seq "signal p-value", or a Roadmap DNase
-p-value track). When a cell has only aligned reads, `cislink pvalue` makes that track from the BAM as the ENCODE
-ATAC-seq pipeline does: filtered, deduplicated reads; cut sites (Tn5 insertion for ATAC-seq, 5' end for DNase-seq);
-`macs2 callpeak -f BED --nomodel --shift -75 --extsize 150 --keep-dup all -B --SPMR -p 0.01` without a control; and
-`macs2 bdgcmp -m ppois -S <cut sites / 1e6>`.
+The models read accessibility as a MACS2 -log10 P track, the format of their training data (Roadmap consolidated
+DNase-seq). Use the published -log10 P track where one exists (Roadmap DNase-seq, ENCODE ATAC-seq "signal p-value");
+do not use read-depth or fold-change tracks. When a cell has only aligned reads, `cislink pvalue` makes the track from
+the BAM, with one procedure per assay:
+
+- **DNase-seq: the Roadmap procedure** that produced the training track (reconstructed; on K562 it reproduces the
+  Roadmap E123 track, element-level Spearman 0.998). Tags: MAPQ ≥ 30, primary, not duplicate-flagged, read 1 of
+  pairs, truncated to their 5' 36 bp, at most 50 million (fixed-seed subsample). Control: Roadmap's simulated uniform
+  DNase control lifted to GRCh38. `macs2 callpeak -c control -f BED -g hs -p 0.01 --nomodel --extsize 146 -B --SPMR`
+  (equal to Roadmap's MACS2 2.0.10 `--shiftsize 73`), then `macs2 bdgcmp -m ppois -S <min(tags, control) / 1e6>`.
+- **ATAC-seq: the ENCODE ATAC-seq pipeline.** Filtered, deduplicated reads; Tn5 insertion sites (+4/−5);
+  `macs2 callpeak -f BED --nomodel --shift -75 --extsize 150 --keep-dup all -B --SPMR -p 0.01` without a control; and
+  `macs2 bdgcmp -m ppois -S <cut sites / 1e6>`. Duplicates are marked first when the BAM header shows no marking
+  step (`--mark-duplicates auto`).
 
 ```bash
-pixi install -e macs2           # MACS2 2.2.7.1 (Linux, macOS x86-64)
+pixi install -e macs2           # MACS2 2.2.7.1 and CrossMap (Linux, macOS x86-64)
+# DNase-seq: fetch and lift the Roadmap control once (about 1.6 GB), then process each BAM
+pixi run -e pipeline cislink roadmap-control --crossmap .pixi/envs/macs2/bin/CrossMap -o roadmap_dnase_control.hg38.bed
+pixi run -e pipeline cislink pvalue sample.bam --assay dnase --control roadmap_dnase_control.hg38.bed \
+    --macs2 .pixi/envs/macs2/bin/macs2 -o sample_DNase_pval.bedGraph
+# ATAC-seq
 pixi run -e pipeline cislink pvalue sample.nodup.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
 ```
 
-Duplicates are marked first when the BAM header shows no marking step (`--mark-duplicates auto`). On osteoblast
-ATAC-seq the result agrees with the ENCODE pipeline's own p-value track (Spearman 0.996 over the candidate elements);
-on myotube ATAC-seq it reproduces the track used in the manuscript (element Spearman 0.99999).
-Use the track as `accessibility` and as `accessibility_pvalue` in the configuration.
+Validation: the DNase procedure run on the HCT116 DNase-seq alignments (ENCFF304MDQ) reproduces the track used in the
+manuscript (chr1 and chr21: 255 of 296 million bases differ, by at most 0.14; Spearman 1.0000 over 500-bp windows),
+and `cislink roadmap-control` reproduces the manuscript's lifted control byte for byte; on osteoblast ATAC-seq the ATAC procedure agrees with the ENCODE pipeline's own
+p-value track (Spearman 0.996 over the candidate elements), and on myotube ATAC-seq it reproduces the manuscript's
+track (element Spearman 0.99999). Applying the DNase procedure to ATAC-seq gave the same results as the ATAC procedure,
+so each assay keeps its own procedure. Use the track as `accessibility` and as `accessibility_pvalue` in the
+configuration.
+
+## Expression
+
+Use poly(A) RNA-seq quantified with the ENCODE long-RNA pipeline (STAR, RSEM; GENCODE v29), the format of the
+training data (K562 poly(A) RNA-seq, replicate 1). Total RNA-seq is not equivalent: intronic and pre-mRNA reads shift
+the TPM of long and short genes in gene-specific ways that rescaling cannot undo. In the manuscript, ENCODE cells used
+RSEM files of biological replicate 1; RNA-seq quantified from public reads used the mean TPM over the eligible
+samples, with the library strand inferred per sample (e.g. from STAR `--quantMode GeneCounts`) and adapters trimmed
+where present. Check a self-quantified sample against a published quantification of the same library before use.
 
 ## Inputs (GRCh38)
 
@@ -83,7 +109,7 @@ candidates: osteoblast_candidates.bed       # or: accessibility_pvalue: osteobla
 hic: osteoblast.hic                         # omit for V2G only
 hic_resolution: 2500                        # the map's finest reliable resolution (5000 for most maps)
 hic_norm: KR
-map_hic: true                               # map O/E onto K562 within distance strata
+# map_hic: true                             # default: true for maps finer than 5 kb, false at 5 kb
 megamap: tissues.hic                        # local copy speeds things up; default is the public URL
 bedtools: bedtools
 threads: 8
@@ -127,9 +153,11 @@ pixi run cislink rank features.tsv -o genes.tsv
    150,000 regions.
 3. **Expression.** Transcript TPM matched on the stable Ensembl ID; gene TPM through the gene symbol's GTF gene ID;
    both rescaled to protein-coding TPM (1e6 / the protein-coding TPM sum).
-4. **Hi-C.** Observed/expected contact between the element-midpoint bin and the TSS bin. With `map_hic`, the cell's
-   O/E is mapped onto K562 5-kb O/E within 16 distance strata, using the cell's own distribution sampled from 20
-   random 2-Mb windows per autosome. The megamap is read at 5 kb (SCALE normalization). Missing contact is scored as 0.
+4. **Hi-C.** Observed/expected contact between the element-midpoint bin and the TSS bin. Maps at the training resolution (5 kb)
+   are used directly, with the map's own normalization (KR; SCALE for intact Hi-C, an equivalent matrix balancing).
+   Finer maps (`hic_resolution` below 5000) keep their resolution and are mapped onto K562 5-kb O/E within 16 distance
+   strata, using the cell's own distribution sampled from 20 random 2-Mb windows per autosome (`map_hic`, on by
+   default only for such maps). The megamap is read at 5 kb (SCALE normalization). Missing contact is scored as 0.
 5. **Distance and gene context.** Distance (element midpoint to TSS), log distance, element length, power-law contact
    ((max(d, 5 kb) / 5 kb)^-1.024), protein-coding genes strictly between element and TSS, the gene's distance rank
    among protein-coding genes (1 = nearest), nearest-gene status, and ABC's list of ubiquitously expressed genes.
