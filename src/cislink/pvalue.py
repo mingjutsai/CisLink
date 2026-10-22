@@ -9,6 +9,7 @@ validated on K562 (element-level Spearman 0.998 with the Roadmap E123 track):
 1. Tags: mapped, primary, not QC-failed, not duplicate-flagged reads with MAPQ >= 30; read 1 only for paired-end data;
    each read truncated to its 5' 36 bp (Roadmap's uniform read length); at most 50 million tags (random subsample,
    fixed seed).
+   Several BAMs (biological replicates) are pooled before the cap, as in Roadmap's consolidated tracks.
 2. Control: Roadmap's simulated uniform DNase control (E123-DNaseControl, lifted to GRCh38; ``cislink roadmap-control``
    downloads and lifts it).
 3. ``macs2 callpeak -t tags -c control -f BED -g hs -p 0.01 --nomodel --extsize 146 -B --SPMR`` (MACS2 2.2.7.1; equal
@@ -142,13 +143,15 @@ def roadmap_control(output, crossmap: str = "CrossMap", tmpdir=None, log=print) 
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def pvalue_track(bam, output, assay: str = "atac", mapq: int = 0, mark_dups: str = "auto", macs2: str = "macs2",
+def pvalue_track(bams, output, assay: str = "atac", mapq: int = 0, mark_dups: str = "auto", macs2: str = "macs2",
                  samtools: str = "samtools", bedtools: str = "bedtools", threads: int = 4, tmpdir=None, control=None,
                  log=print) -> dict:
-    """Write the accessibility -log10 P track (bedGraph; also a bigWig when ``output`` ends in .bw/.bigWig) of a BAM
-    file. DNase-seq uses the Roadmap procedure and needs ``control`` (``roadmap_control``); ATAC-seq the ENCODE ATAC
+    """Write the accessibility -log10 P track (bedGraph; also a bigWig when ``output`` ends in .bw/.bigWig) of one BAM
+    file or of several (biological replicates, pooled: their tags are combined before the cap and MACS2, as Roadmap
+    and ENCODE pool replicates). DNase-seq uses the Roadmap procedure and needs ``control`` (``roadmap_control``); ATAC-seq the ENCODE ATAC
     procedure (``mapq`` and ``mark_dups`` apply to it: 'auto' marks when the header shows no marking step, 'yes' or
     'no'). Returns a summary."""
+    bams = [str(b) for b in ([bams] if isinstance(bams, (str, os.PathLike)) else bams)]
     assay = assay.lower()
     if assay not in ASSAYS:
         raise ValueError(f"assay must be one of {list(ASSAYS)}")
@@ -161,10 +164,13 @@ def pvalue_track(bam, output, assay: str = "atac", mapq: int = 0, mark_dups: str
     bedgraph = (out.rsplit(".", 1)[0] + ".bedGraph") if bigwig else out
     tmp = tempfile.mkdtemp(dir=tmpdir or os.path.dirname(os.path.abspath(out)))
     try:
+        sizes = chrom_sizes(bams[0], samtools)
         if assay == "dnase":
-            sizes = chrom_sizes(bam, samtools)
             tags = os.path.join(tmp, "tags.bed")
-            n = roadmap_tags(bam, tags, sizes, samtools, bedtools, threads)
+            for i, b in enumerate(bams):   # each replicate's tags uncapped, then one cap over the pool
+                k = roadmap_tags(b, os.path.join(tmp, f"tags{i}.bed"), sizes, samtools, bedtools, threads, max_tags=10**12)
+                log(f"{b}: {k} DNase tags")
+            n = _pool_and_cap([os.path.join(tmp, f"tags{i}.bed") for i in range(len(bams))], tags, ROADMAP_MAX_TAGS)
             if n == 0:
                 raise RuntimeError("no reads pass the filters")
             nc = int(_run(f"wc -l < {shlex.quote(str(control))}").strip())
@@ -173,13 +179,15 @@ def pvalue_track(bam, output, assay: str = "atac", mapq: int = 0, mark_dups: str
             _run(f"{m} callpeak -t {shlex.quote(tags)} -c {shlex.quote(str(control))} -f BED -n acc -g hs --outdir {t} {ROADMAP_CALLPEAK}")
             _run(f"{m} bdgcmp -t {t}/acc_treat_pileup.bdg -c {t}/acc_control_lambda.bdg -m ppois -S {min(n, nc) / 1e6!r} --o-prefix {t}/acc")
             return _finish(tmp, sizes, bedgraph, out, bigwig, {"tags": n, "assay": assay}, log)
-        src = str(bam)
-        if mark_dups == "yes" or (mark_dups == "auto" and not has_duplicate_marks(bam, samtools)):
-            log("marking duplicates (samtools fixmate/markdup)")
-            src = mark_duplicates(bam, os.path.join(tmp, "markdup.bam"), samtools, threads, tmp)
-        sizes = chrom_sizes(src, samtools)
         tags = os.path.join(tmp, "cuts.bed")
-        n = cut_sites(src, tags, assay, mapq, samtools, bedtools, threads)
+        for i, b in enumerate(bams):   # each replicate deduplicated on its own, cut sites pooled
+            src = b
+            if mark_dups == "yes" or (mark_dups == "auto" and not has_duplicate_marks(b, samtools)):
+                log(f"{b}: marking duplicates (samtools fixmate/markdup)")
+                src = mark_duplicates(b, os.path.join(tmp, f"markdup{i}.bam"), samtools, threads, tmp)
+            k = cut_sites(src, os.path.join(tmp, f"cuts{i}.bed"), assay, mapq, samtools, bedtools, threads)
+            log(f"{b}: {k} cut sites")
+        n = _pool_and_cap([os.path.join(tmp, f"cuts{i}.bed") for i in range(len(bams))], tags, None)
         if n == 0:
             raise RuntimeError("no reads pass the filters")
         log(f"{n} cut sites ({assay}); MACS2")
@@ -189,6 +197,19 @@ def pvalue_track(bam, output, assay: str = "atac", mapq: int = 0, mark_dups: str
         return _finish(tmp, sizes, bedgraph, out, bigwig, {"cut_sites": n, "assay": assay}, log)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _pool_and_cap(parts, out, max_tags) -> int:
+    """Concatenate tag files (removing them) and keep at most ``max_tags`` (fixed-seed shuf); returns the tag count."""
+    _run(f"cat {' '.join(shlex.quote(p) for p in parts)} > {shlex.quote(str(out))}")
+    for p in parts:
+        os.remove(p)
+    n = int(_run(f"wc -l < {shlex.quote(str(out))}").strip())
+    if max_tags and n > max_tags:
+        q = shlex.quote(str(out))
+        _run(f"shuf -n {int(max_tags)} --random-source=<(yes) {q} > {q}.cap && mv {q}.cap {q}")
+        n = max_tags
+    return n
 
 
 def _finish(tmp, sizes, bedgraph, out, bigwig, summary, log) -> dict:

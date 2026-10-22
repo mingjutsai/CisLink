@@ -22,18 +22,20 @@ the BAM, with one procedure per assay:
 - **DNase-seq: the Roadmap procedure** that produced the training track (reconstructed; on K562 it reproduces the
   Roadmap E123 track, element-level Spearman 0.998). Tags: MAPQ ≥ 30, primary, not duplicate-flagged, read 1 of
   pairs, truncated to their 5' 36 bp, at most 50 million (fixed-seed subsample). Control: Roadmap's simulated uniform
-  DNase control lifted to GRCh38. `macs2 callpeak -c control -f BED -g hs -p 0.01 --nomodel --extsize 146 -B --SPMR`
+  DNase control lifted to GRCh38. Biological replicates are pooled: pass every replicate's BAM, and their tags are combined
+  before the 50-million cap, as in Roadmap's consolidated tracks. `macs2 callpeak -c control -f BED -g hs -p 0.01 --nomodel --extsize 146 -B --SPMR`
   (equal to Roadmap's MACS2 2.0.10 `--shiftsize 73`), then `macs2 bdgcmp -m ppois -S <min(tags, control) / 1e6>`.
 - **ATAC-seq: the ENCODE ATAC-seq pipeline.** Filtered, deduplicated reads; Tn5 insertion sites (+4/−5);
   `macs2 callpeak -f BED --nomodel --shift -75 --extsize 150 --keep-dup all -B --SPMR -p 0.01` without a control; and
   `macs2 bdgcmp -m ppois -S <cut sites / 1e6>`. Duplicates are marked first when the BAM header shows no marking
-  step (`--mark-duplicates auto`).
+  step (`--mark-duplicates auto`). Several BAMs (replicates) are deduplicated one by one and their cut sites pooled, as
+  the ENCODE pipeline's pooled-replicate track.
 
 ```bash
 pixi install -e macs2           # MACS2 2.2.7.1 and CrossMap (Linux, macOS x86-64)
 # DNase-seq: fetch and lift the Roadmap control once (about 1.6 GB), then process each BAM
 pixi run -e pipeline cislink roadmap-control --crossmap .pixi/envs/macs2/bin/CrossMap -o roadmap_dnase_control.hg38.bed
-pixi run -e pipeline cislink pvalue sample.bam --assay dnase --control roadmap_dnase_control.hg38.bed \
+pixi run -e pipeline cislink pvalue rep1.bam rep2.bam --assay dnase --control roadmap_dnase_control.hg38.bed \
     --macs2 .pixi/envs/macs2/bin/macs2 -o sample_DNase_pval.bedGraph
 # ATAC-seq
 pixi run -e pipeline cislink pvalue sample.nodup.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
