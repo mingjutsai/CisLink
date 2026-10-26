@@ -13,6 +13,8 @@ The steps reproduce the pipeline used for the manuscript:
    and TSS, distance rank of the gene, nearest-gene status, ubiquitously expressed gene.
 5. **Hi-C**: the cell's own map (CisLink-E2G, ``HiC_Contact``) and the multi-tissue megamap (CisLink-V2G,
    ``HiC_megamap_oe``), observed/expected between the element-midpoint bin and the TSS bin.
+6. **Cross-epigenome correlations** (``F1_dnase``, ``F1_h3k27ac``): ``cislink.roadmap``, from the Roadmap activity
+   reference; ``DxA`` is computed when scoring.
 
 Hi-C needs ``hic-straw``; bigWig tracks need ``pyBigWig``; bedGraph tracks and candidate calling need ``bedtools``.
 """
@@ -321,15 +323,19 @@ def distance_features(rows: pd.DataFrame, genes: pd.DataFrame) -> pd.DataFrame:
 
 # ---------------------------------------------------------------- full build
 def build_features(rows: pd.DataFrame, *, gtf, tracks: dict[str, str], transcript_quantification, gene_quantification,
-                   candidates_bed, hic=None, hic_resolution: int = HIC_BIN, hic_norm: str = "KR", map_hic: bool = True,
+                   candidates_bed, hic=None, hic_resolution: int = HIC_BIN, hic_norm: str = "KR", map_hic: bool | None = None,
                    megamap=MEGAMAP, bedtools: str = "bedtools", threads: int = 4, cell_quantiles: pd.DataFrame | None = None,
                    hic_quantiles: pd.DataFrame | None = None, log=print) -> pd.DataFrame:
-    """Harmonized feature table for ``rows`` (from ``variant_pairs`` or ``element_pairs``), ready for scoring.
+    """Harmonized feature table for ``rows`` (from ``variant_pairs`` or ``element_pairs``); add the v1.3 cross-epigenome
+    correlations with ``cislink.roadmap.add_f1`` (as ``cislink build`` does) before scoring.
 
     ``hic``: the cell's .hic for CisLink-E2G (omit for V2G only). ``map_hic``: map the cell's O/E onto K562 within
-    distance strata (default; the manuscript did this for the lab's 2-2.5-kb maps). ``megamap``: .hic path or URL of
+    distance strata; default (None): only for maps finer than the training 5 kb (the manuscript's rule: the lab's 2-2.5-kb
+    maps were mapped, 5-kb maps used directly). ``megamap``: .hic path or URL of
     the multi-tissue megamap for CisLink-V2G (``None`` to skip)."""
     tracks = normalize_tracks(tracks)
+    if map_hic is None:
+        map_hic = hic_resolution < HIC_BIN
     if cell_quantiles is not None:
         cell_quantiles = hz.compat(cell_quantiles)
     transcripts, genes = read_gtf(gtf)

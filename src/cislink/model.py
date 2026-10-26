@@ -1,6 +1,7 @@
 """CisLink models: L2-regularized logistic regressions stored as plain JSON.
 
-A model scores a table of harmonized features (one row per element-gene or variant-gene pair):
+A model scores a table of harmonized features (one row per element-gene or variant-gene pair); ``DxA`` (log10 distance x
+harmonized accessibility) is computed here when the table lacks it:
 
     score = sigmoid(intercept + coef . standardize(sign(x) * log1p(|x|)))
 
@@ -18,8 +19,9 @@ import numpy as np
 import pandas as pd
 
 MODELS = ("e2g", "v2g")
-# Hi-C contact is missing where a map has no record; the models were trained with these filled by 0.
-FILL_ZERO = ("HiC_Contact", "HiC_megamap_oe")
+# Hi-C contact is missing where a map has no record, and F1 where an element or gene has no Roadmap data; the models
+# were trained with these filled by 0.
+FILL_ZERO = ("HiC_Contact", "HiC_megamap_oe", "F1_dnase", "F1_h3k27ac")
 # earlier column names still accepted (accessibility was called DNase, though ATAC-seq works as well)
 LEGACY = {"Accessibility_Enh": "DNase_Enh", "Accessibility_Prom": "DNase_Prom"}
 
@@ -47,12 +49,22 @@ class CisLinkModel:
                    scaler_scale=np.asarray(d["scaler_scale"], float), coef=np.asarray(d["coef"], float),
                    intercept=float(d["intercept"]), thresholds=d.get("thresholds", {}), meta=d)
 
+    def missing(self, columns) -> list[str]:
+        """Feature columns the model needs that ``columns`` lacks (legacy names and the derived ``DxA`` allowed for)."""
+        have = set(columns) | {new for new, old in LEGACY.items() if old in set(columns)}
+        if {"log10_distance", "Accessibility_Enh"} <= have:
+            have.add("DxA")
+        return [f for f in self.features if f not in have]
+
     def matrix(self, table: pd.DataFrame) -> np.ndarray:
         """The model's input matrix from a feature table, with the checks applied before scoring."""
         table = table.rename(columns={old: new for new, old in LEGACY.items() if new not in table.columns and old in table.columns})
+        if "DxA" in self.features and "DxA" not in table.columns and {"log10_distance", "Accessibility_Enh"} <= set(table.columns):
+            table = table.assign(DxA=table.log10_distance * table.Accessibility_Enh)   # distance x accessibility
         missing = [f for f in self.features if f not in table.columns]
         if missing:
-            raise KeyError(f"{self.name}: missing feature columns {missing}")
+            hint = " (add them with 'cislink build' or 'cislink add-f1'; see docs/pipeline.md)" if set(missing) & {"F1_dnase", "F1_h3k27ac"} else ""
+            raise KeyError(f"{self.name}: missing feature columns {missing}{hint}")
         x = table.loc[:, list(self.features)].copy()
         for f in FILL_ZERO:
             if f in x:
@@ -60,7 +72,7 @@ class CisLinkModel:
         x = x.apply(pd.to_numeric, errors="raise")
         bad = [f for f in self.features if x[f].isna().any()]
         if bad:
-            raise ValueError(f"{self.name}: missing values in {bad} (only Hi-C contact may be missing)")
+            raise ValueError(f"{self.name}: missing values in {bad} (only Hi-C contact and F1 may be missing)")
         return x.to_numpy(dtype=float)
 
     def decision_function(self, table: pd.DataFrame) -> np.ndarray:
