@@ -8,7 +8,7 @@ please cite the original studies (below) when using them.
 
 | File | Contents |
 |---|---|
-| `{K562,HCT116,GM12878,WTC11}_heldout.pairs.tsv.gz` | Held-out pairs: label, gene, source study (K562), element–TSS distance, ENCODE-rE2G / ENCODE-rE2G Extended / ABC predictions (where available), distance baseline, and the reference CisLink scores used in the manuscript |
+| `{K562,HCT116,GM12878,WTC11}_heldout.pairs.tsv.gz` | Held-out pairs: label, gene, source study (K562), element–TSS distance, ENCODE-rE2G / ENCODE-rE2G Extended / ABC predictions (where available), distance baseline, and the reference CisLink v1.3 scores used in the manuscript |
 | `{K562,HCT116,GM12878,WTC11}_heldout.features.tsv.gz` | Feature rows of those pairs, one per element and transcript of the gene; a pair's score is the maximum over its rows |
 
 Held-out K562 pairs come from five studies not used in training (DC-TAP, Klann et al., Morris et al., Reilly et al.,
@@ -18,11 +18,15 @@ ENCODE-rE2G is the better of its two available predictions. WTC11 has no histone
 there (CisLink-E2G columns are empty).
 
 Inputs follow the manuscript's rules: accessibility as a MACS2 -log10 P track (K562 and GM12878: Roadmap DNase-seq;
-HCT116 and WTC11: ENCODE DNase-seq alignments processed by the Roadmap procedure, `cislink pvalue --assay dnase`);
-expression from poly(A) RNA-seq (ENCODE RSEM, biological replicate 1; GM12878 replicate 2; WTC11 the mean of eight
-GSE314132 libraries quantified with the ENCODE pipeline); Hi-C as each cell's 5-kb O/E.
+HCT116 and WTC11: ENCODE DNase-seq alignments, biological replicates pooled, processed by the Roadmap procedure,
+`cislink pvalue --assay dnase`); expression from poly(A) RNA-seq, the mean over biological replicates (ENCODE RSEM;
+WTC11 the mean of eight GSE314132 libraries quantified with the ENCODE pipeline); Hi-C as each cell's 5-kb O/E. The
+v1.3 cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) are the per-element values used in the manuscript
+(computed from the Roadmap bigWig tracks); recomputing them from the released 25-bp reference (`cislink add-f1`) changes
+them slightly (Pearson r >= 0.9995) and the AUPRCs by at most 0.0023. `DxA` is computed by the package.
 
-Coordinates are GRCh38. Features follow `docs/features.md`. Distance baseline = negative element–TSS distance.
+Coordinates: K562 and GM12878 keep the hg19 coordinates of the training data; HCT116 and WTC11 are GRCh38. Features
+follow `docs/features.md`. Distance baseline = negative element–TSS distance.
 
 ## GWAS silver standard (`data/gwas/silver_standard.tsv.gz`)
 

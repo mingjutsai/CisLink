@@ -26,8 +26,8 @@ def test_manuscript_numbers():
     t = silver()
     s = gwas.summarize(t, {"CisLink-V2G": False, "Nearest gene": True, "L2G": False}).set_index("method")
     assert t.locus.nunique() == 568
-    assert round(s.loc["CisLink-V2G", "top1"], 3) == 0.533 and round(s.loc["Nearest gene", "top1"], 3) == 0.529
-    assert round(s.loc["L2G", "top1"], 3) == 0.447 and round(s.loc["CisLink-V2G", "MRR_cc"], 3) == 0.590
+    assert round(s.loc["CisLink-V2G", "top1"], 3) == 0.537 and round(s.loc["Nearest gene", "top1"], 3) == 0.529
+    assert round(s.loc["L2G", "top1"], 3) == 0.447 and round(s.loc["CisLink-V2G", "MRR_cc"], 3) == 0.591
     lo = t[~t.locus.isin(set(t[t.target & t["L2G training gene"]].locus))]
     assert lo.locus.nunique() == 432
-    assert round(gwas.locus_pr(gwas.locus_calls(lo, "CisLink-V2G"))["AP"], 3) == 0.286
+    assert round(gwas.locus_pr(gwas.locus_calls(lo, "CisLink-V2G"))["AP"], 3) == 0.293
