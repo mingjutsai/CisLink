@@ -2,6 +2,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 import pandas as pd
 import pytest
@@ -11,6 +12,8 @@ from cislink import pvalue as pv
 needs_tools = pytest.mark.skipif(shutil.which("samtools") is None or shutil.which("bedtools") is None, reason="samtools/bedtools not installed")
 MACS2 = os.environ.get("CISLINK_MACS2", ".pixi/envs/macs2/bin/macs2")
 needs_macs2 = pytest.mark.skipif(shutil.which(MACS2) is None, reason="MACS2 not installed (pixi install -e macs2)")
+# the Roadmap 50-million-tag cap subsamples with GNU shuf in bash (not on stock macOS or Windows)
+needs_shuf = pytest.mark.skipif(sys.platform == "win32" or shutil.which("shuf") is None, reason="GNU shuf (coreutils) and bash needed")
 HEADER = "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:chr1\tLN:100000\n@SQ\tSN:chr1_alt\tLN:5000\n"
 
 
@@ -78,6 +81,7 @@ def test_roadmap_dnase_tags(tmp_path):
 
 
 @needs_tools
+@needs_shuf
 def test_roadmap_dnase_read1_only_and_subsample(tmp_path):
     reads = [("a", 65, 1001, 50, 60), ("a", 129, 1201, 50, 60), ("b", 65, 3001, 50, 60), ("b", 129, 3201, 50, 60), ("c", 0, 5001, 50, 60)]
     b = sam(tmp_path, reads)
@@ -101,6 +105,7 @@ def test_replicates_are_pooled(tmp_path):
     assert r["cut_sites"] == 200
 
 
+@needs_shuf
 def test_pool_and_cap(tmp_path):
     parts = []
     for i in range(2):

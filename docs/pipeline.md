@@ -25,7 +25,8 @@ the BAM, with one procedure per assay:
 
 - **DNase-seq: the Roadmap procedure** that produced the training track (reconstructed; on K562 it reproduces the
   Roadmap E123 track, element-level Spearman 0.998). Tags: MAPQ ≥ 30, primary, not duplicate-flagged, read 1 of
-  pairs, truncated to their 5' 36 bp, at most 50 million (fixed-seed subsample). Control: Roadmap's simulated uniform
+  pairs, truncated to their 5' 36 bp, at most 50 million (fixed-seed subsample with GNU `shuf`; on macOS install
+  coreutils and put its `gnubin` directory on the PATH). Control: Roadmap's simulated uniform
   DNase control lifted to GRCh38. Biological replicates are pooled: pass every replicate's BAM, and their tags are combined
   before the 50-million cap, as in Roadmap's consolidated tracks. `macs2 callpeak -c control -f BED -g hs -p 0.01 --nomodel --extsize 146 -B --SPMR`
   (equal to Roadmap's MACS2 2.0.10 `--shiftsize 73`), then `macs2 bdgcmp -m ppois -S <min(tags, control) / 1e6>`.
