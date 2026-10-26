@@ -7,7 +7,7 @@ import pandas as pd
 
 from .model import MODELS, load_model
 
-CELLS = ("K562", "HCT116", "GM12878")
+CELLS = ("K562", "HCT116", "GM12878", "WTC11")   # WTC11 has no histone marks: CisLink-V2G only
 
 
 def data_dir(path: str | Path | None = None) -> Path:
@@ -32,6 +32,9 @@ def crispr_pairs(cell: str, path=None, score: bool = True) -> pd.DataFrame:
         f = crispr_features(cell, path)
         for m in MODELS:
             model = load_model(m)
+            if model.missing(f.columns):   # e.g. CisLink-E2G in WTC11 (no histone marks)
+                p[model.name] = float("nan")
+                continue
             p[model.name] = p.ID.map(pd.Series(model.predict(f), index=f.ID).groupby(level=0).max()).fillna(0.0).values
     p["cluster"] = p.gene
     return p

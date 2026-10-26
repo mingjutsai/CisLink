@@ -12,7 +12,7 @@ from sklearn.metrics import average_precision_score
 B, SEED = 1000, 0
 DISTANCE_BINS = ((0, 1e4, "<10 kb"), (1e4, 5e4, "10-50 kb"), (5e4, 2e5, "50-200 kb"), (2e5, np.inf, ">200 kb"))
 GROUPS = {
-    "accessibility": ["Accessibility_Enh", "Accessibility_Prom"],
+    "accessibility": ["Accessibility_Enh", "Accessibility_Prom", "DxA"],   # DxA = log10 distance x accessibility
     "histone marks": [f"{m}_{p}" for m in ("H4K20me1", "H3K9me3", "H3K9ac", "H3K79me2", "H3K4me3", "H3K4me2", "H3K4me1",
                                            "H3K36me3", "H3K27me3", "H3K27ac", "H2A.Z") for p in ("Enh", "Prom")],
     "CTCF": ["CTCF_Enh", "CTCF_Prom"],
@@ -20,6 +20,7 @@ GROUPS = {
     "contact": ["HiC_megamap_oe", "HiC_Contact", "powerlaw_contact"],
     "distance and gene context": ["distance", "log10_distance", "n_genes_between", "gene_rank", "is_nearest_gene"],
     "element": ["Enh_length"],
+    "cross-epigenome correlation": ["F1_dnase", "F1_h3k27ac"],
 }
 
 
@@ -99,6 +100,8 @@ def permutation_importance(predict: Callable[[pd.DataFrame], np.ndarray], table:
     several rows (e.g. transcripts)."""
     agg = aggregate or (lambda p: p)
     rng = np.random.default_rng(seed)
+    if any("DxA" in c for c in groups.values()) and "DxA" not in table and {"log10_distance", "Accessibility_Enh"} <= set(table):
+        table = table.assign(DxA=table.log10_distance * table.Accessibility_Enh)   # permuted as a column, as in the manuscript
     full = agg(predict(table)); perm = {}
     for g, cols in groups.items():
         cols = [c for c in cols if c in table.columns]
