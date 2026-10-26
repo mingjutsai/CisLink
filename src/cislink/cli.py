@@ -1,5 +1,5 @@
-"""Command line: ``cislink pvalue``, ``cislink roadmap-control``, ``cislink validate``, ``cislink build``, ``cislink score``,
-``cislink rank`` and ``cislink info``."""
+"""Command line: ``cislink pvalue``, ``cislink roadmap-control``, ``cislink reference download``, ``cislink validate``,
+``cislink build``, ``cislink add-f1``, ``cislink score``, ``cislink rank`` and ``cislink info``."""
 from __future__ import annotations
 
 import argparse
@@ -52,12 +52,15 @@ def _build(a) -> int:
     from . import features as cf
     from .inputs import InputError, preflight
     log = lambda s: print(s, file=sys.stderr, flush=True)  # noqa: E731
+    from . import roadmap as rm
     cfg, v, e = _load_inputs(a)
     try:
         preflight(cfg, v, e, log=log)
-    except InputError as err:
+        ref = rm.reference_path(a.roadmap_ref or cfg.get("roadmap_reference"))
+    except (InputError, rm.ReferenceError) as err:
         print(f"error: {err}", file=sys.stderr)
         return 1
+    crossmap = a.crossmap or cfg.get("crossmap", "CrossMap")
     tx, _ = cf.read_gtf(cfg["gtf"])
     tss = cf.protein_coding_tss(tx)
     rows = cf.variant_pairs(v, tss, a.max_distance) if v is not None else cf.element_pairs(e, tss, a.max_distance)
@@ -86,6 +89,7 @@ def _build(a) -> int:
                             hic_resolution=int(cfg.get("hic_resolution", cf.HIC_BIN)), hic_norm=cfg.get("hic_norm", "KR"),
                             map_hic=bool(map_hic), megamap=cfg.get("megamap", cf.MEGAMAP),
                             bedtools=bt, threads=th, log=log)
+    out = rm.add_f1(out, cfg["gtf"], ref, crossmap=crossmap, log=log)
     if "SNPID" in rows:
         out.insert(1, "SNPID", rows.SNPID.to_numpy())
     else:
@@ -98,6 +102,38 @@ def _build(a) -> int:
             out[model.name] = model.predict(out)
     out.to_csv(a.output, sep="\t", index=False, float_format="%.8g")
     print(f"wrote {a.output}: {len(out)} rows", file=sys.stderr)
+    return 0
+
+
+def _add_f1(a) -> int:
+    from . import roadmap as rm
+    try:
+        ref = rm.reference_path(a.roadmap_ref)
+    except rm.ReferenceError as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
+    t = pd.read_csv(a.input, sep="\t", low_memory=False)
+    need = {"Enh", "TX"} - set(t.columns)
+    if need:
+        print(f"error: the table needs columns Enh (chr:start:end) and TX (gene optional); missing {sorted(need)}", file=sys.stderr)
+        return 1
+    t = rm.add_f1(t, a.gtf, ref, crossmap=a.crossmap, genome=a.genome, log=lambda s: print(s, file=sys.stderr, flush=True))
+    t.to_csv(a.output, sep="\t", index=False, float_format="%.8g")
+    return 0
+
+
+def _reference(a) -> int:
+    from . import roadmap as rm
+    log = lambda s: print(s, file=sys.stderr, flush=True)  # noqa: E731
+    try:
+        if a.action == "download":
+            ref = rm.download(a.dest, base_url=a.base_url, keep_archives=a.keep_archives, log=log)
+            print(f"reference ready: {ref}\nuse it with: cislink build --roadmap-ref {ref}   (or export {rm.ENV}={ref})")
+        else:
+            log(f"verified {rm.verify(rm.reference_path(a.dest))} files")
+    except rm.ReferenceError as err:
+        print(f"error: {err}", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -167,8 +203,24 @@ def main(argv=None) -> int:
     inputs_args(b)
     b.add_argument("--max-distance", type=int, default=1_000_000)
     b.add_argument("--score", action="store_true", help="also add CisLink-V2G (and CisLink-E2G when the config has Hi-C) scores")
+    b.add_argument("--roadmap-ref", help="Roadmap activity reference directory (cislink reference download); default $CISLINK_ROADMAP_REF "
+                                         "or 'roadmap_reference' in the config")
+    b.add_argument("--crossmap", help="CrossMap executable for the GRCh38 -> hg19 lift of the F1 features (default: config 'crossmap' or CrossMap)")
     b.add_argument("-o", "--output", required=True)
     b.set_defaults(func=_build)
+    f1 = sub.add_parser("add-f1", help="add the F1 features (Roadmap activity-expression correlations) to a feature table")
+    f1.add_argument("input", help="feature table with columns Enh (chr:start:end), TX and optionally gene (symbol)")
+    f1.add_argument("--gtf", required=True, help="the annotation used to build the table (transcript -> gene IDs)")
+    f1.add_argument("-o", "--output", required=True)
+    f1.add_argument("--roadmap-ref", help="reference directory (default $CISLINK_ROADMAP_REF)")
+    f1.add_argument("--crossmap", default="CrossMap"); f1.add_argument("--genome", choices=("GRCh38", "hg19"), default="GRCh38")
+    f1.set_defaults(func=_add_f1)
+    rf = sub.add_parser("reference", help="download or verify the Roadmap activity reference (16.3 GB) used by the F1 features")
+    rf.add_argument("action", choices=("download", "verify"))
+    rf.add_argument("--dest", required=True, help="download: directory to put it in; verify: the reference directory")
+    rf.add_argument("--base-url", help="location of the archives (default: the Zenodo record)")
+    rf.add_argument("--keep-archives", action="store_true")
+    rf.set_defaults(func=_reference)
     pv = sub.add_parser("pvalue", help="accessibility -log10 P track from an ATAC-seq or DNase-seq BAM (see docs/pipeline.md)")
     pv.add_argument("bam", nargs="+", help="BAM file(s); biological replicates are pooled")
     pv.add_argument("-o", "--output", required=True, help="bedGraph, or .bw/.bigWig (needs pyBigWig)")

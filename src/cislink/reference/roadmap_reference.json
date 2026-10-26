@@ -1,0 +1,26 @@
+{
+ "title": "CisLink Roadmap activity reference v1 (CisLink v1.3 F1 features)",
+ "directory": "roadmap_activity_v1",
+ "doi": "10.5281/zenodo.TBD",
+ "base_url": null,
+ "url_suffix": "?download=1",
+ "note": "base_url becomes https://zenodo.org/records/<record>/files once the record is published",
+ "extracted_bytes": 16330000000,
+ "archives": [
+  {
+   "name": "roadmap_activity_v1_core.tar.gz",
+   "bytes": 3747556,
+   "md5": "c393b649aca9668b878be609d3a311e5"
+  },
+  {
+   "name": "roadmap_activity_v1_DNase.tar",
+   "bytes": 6831554560,
+   "md5": "6eb2dad55644ad2293670d940f4e51db"
+  },
+  {
+   "name": "roadmap_activity_v1_H3K27ac.tar",
+   "bytes": 9499607040,
+   "md5": "43eaca6fd0470bbfc56fda81e590693b"
+  }
+ ]
+}
