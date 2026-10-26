@@ -99,6 +99,7 @@ def test_build_without_hic(inputs):
     tracks = {m: str(inputs["bedgraph"]) for m in hz.MARKS}
     out = cf.build_features(rows, gtf=inputs["gtf"], tracks=tracks, transcript_quantification=inputs["tq"], gene_quantification=inputs["gq"],
                             candidates_bed=None, cell_quantiles=hz.k562_chromatin_quantiles(), hic=None, megamap=None, log=lambda s: None)
+    out = out.assign(F1_dnase=0.0, F1_h3k27ac=0.0)   # cislink.roadmap.add_f1 (tested in test_roadmap.py) adds these
     for m in ("v2g", "e2g"):
         p = load_model(m).predict(out)
         assert len(p) == len(rows) and np.all((p >= 0) & (p <= 1))
