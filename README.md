@@ -10,11 +10,14 @@ across cell types, traits and accessibility assays:
 | | **CisLink-E2G** | **CisLink-V2G** |
 |---|---|---|
 | Question | Which elements regulate which genes in this cell? | Which gene does this GWAS variant regulate? |
-| Inputs (features) | accessibility, 11 histone marks, CTCF, expression, the cell's own Hi-C, distance and gene context (37) | accessibility, expression, multi-tissue Hi-C megamap, distance and gene context (13) |
-| Needs | ATAC-seq or DNase-seq, histone ChIP-seq, RNA-seq, Hi-C | ATAC-seq or DNase-seq, RNA-seq |
-| Use it to | map enhancer–gene links, especially for elements 10–200 kb from the gene; rank elements for CRISPR follow-up | score every fine-mapped variant at a GWAS locus, in a peak or not, and call a gene at every locus |
+| Inputs (features) | accessibility, 11 histone marks, CTCF, expression, the cell's own Hi-C, distance and gene context, cross-epigenome activity–expression correlations, distance × accessibility (40) | accessibility, expression, multi-tissue Hi-C megamap, distance and gene context, cross-epigenome correlations, distance × accessibility (16) |
+| Needs | ATAC-seq or DNase-seq, histone ChIP-seq, RNA-seq, Hi-C; the Roadmap reference | ATAC-seq or DNase-seq, RNA-seq; the Roadmap reference |
+| Use it to | map enhancer–gene links, especially for elements 10–50 kb from the gene; rank elements for CRISPR follow-up | score every fine-mapped variant at a GWAS locus, in a peak or not, and call a gene at every locus |
 
 Both are L2-regularized logistic regressions stored as plain JSON (`src/cislink/models/`), so scoring needs only NumPy.
+This is release 1.3. The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
+come from a genome-wide reference of Roadmap Epigenomics tracks, which `cislink build` reads (`cislink reference download`,
+16.3 GB, once). The cell's own data supply everything else.
 
 ## Install
 
@@ -67,28 +70,35 @@ score at which held-out K562 CRISPR pairs reach a given recall:
 
 | | 70% recall | 50% recall |
 |---|---|---|
-| CisLink-E2G | 0.180 | 0.529 |
-| CisLink-V2G | 0.139 | 0.410 |
+| CisLink-E2G | 0.195 | 0.493 |
+| CisLink-V2G | 0.147 | 0.402 |
 
 The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 04); the 70%-recall
-threshold kept 53–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
+threshold kept 54–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
 log-odds of a pair.
 
 ### 3. Build features for a new cell type
 
 `cislink build` computes the harmonized feature table from a cell type's raw data (GTF, bedGraph or bigWig tracks,
-RNA-seq quantifications, `.hic`), scores it, and `cislink rank` ranks genes per variant or element. It reproduces the
-manuscript's matrices exactly; see [`docs/pipeline.md`](docs/pipeline.md) and `examples/config.example.yaml`.
+RNA-seq quantifications, `.hic`) and the Roadmap activity reference. It then scores the table, and `cislink rank` ranks
+genes per variant or element. See [`docs/pipeline.md`](docs/pipeline.md) and `examples/config.example.yaml`.
 
 ```bash
 pixi install -e pipeline
+pixi install -e macs2                                       # CrossMap (and MACS2 for cislink pvalue)
+pixi run cislink reference download --dest /data/cislink_ref    # once, 16.3 GB; then:
+export CISLINK_ROADMAP_REF=/data/cislink_ref/roadmap_activity_v1
 # only aligned reads? make the accessibility -log10 P track first (pixi install -e macs2; see docs/pipeline.md)
 pixi run -e pipeline cislink pvalue sample.bam --assay atac --macs2 .pixi/envs/macs2/bin/macs2 -o sample_ATAC_pval.bedGraph
 # DNase-seq uses the Roadmap procedure and its uniform control (cislink roadmap-control): --assay dnase --control ...
 pixi run -e pipeline cislink validate --variants variants.tsv --config my_cell.yaml   # preflight
-pixi run -e pipeline cislink build --variants variants.tsv --config my_cell.yaml --score -o features.tsv
+pixi run -e pipeline cislink build --variants variants.tsv --config my_cell.yaml --score \
+    --crossmap .pixi/envs/macs2/bin/CrossMap -o features.tsv
 pixi run cislink rank features.tsv -o genes.tsv
 ```
+
+A feature table made earlier (columns `Enh` and `TX`) gets the v1.3 correlations with
+`cislink add-f1 table.tsv --gtf gencode.v29.annotation.gtf -o table.f1.tsv`.
 
 The harmonization steps are also available on their own (`cislink.harmonize`), with the K562 references shipped
 in the package:
@@ -128,9 +138,9 @@ pixi run lab          # open the notebooks
 pixi run notebooks    # re-execute all of them
 ```
 
-Key results: on held-out K562 CRISPR pairs, CisLink-E2G AUPRC 0.688 (ENCODE-rE2G Extended 0.678, CisLink-V2G 0.578,
-distance 0.366), and 0.683 against 0.158 for distance 50–200 kb from the TSS; on the 568 silver-standard credible
-sets, CisLink-V2G ranks the silver gene first in 53.3% (nearest gene 52.9%, L2G 44.7%, PoPS 37.2%, ENCODE-rE2G 16.4%).
+Key results: on held-out K562 CRISPR pairs, CisLink-E2G AUPRC 0.700 (ENCODE-rE2G Extended 0.678, CisLink-V2G 0.603,
+distance 0.366), and 0.689 against 0.158 for distance 50–200 kb from the TSS; on the 568 silver-standard credible
+sets, CisLink-V2G ranks the silver gene first in 53.7% (nearest gene 52.9%, L2G 44.7%, PoPS 37.2%, ENCODE-rE2G 16.4%).
 
 ## Development
 

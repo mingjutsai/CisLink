@@ -24,5 +24,7 @@ hic_norm: KR             # SCALE for ENCODE intact Hi-C
 # megamap: https://s3.us-central-1.wasabisys.com/aiden-encode-hic-mirror/bifocals_iter2/tissues.hic   (default)
 # chromatin_quantiles: OUT.chromatin_quantiles.tsv   # reuse the cell's quantiles saved by a first run
 # hic_quantiles: OUT.hic_quantiles.tsv
+roadmap_reference: roadmap_activity_v1   # cislink reference download (or --roadmap-ref / $CISLINK_ROADMAP_REF)
+crossmap: CrossMap                       # e.g. .pixi/envs/macs2/bin/CrossMap; lifts elements to hg19 for the F1 features
 bedtools: bedtools
 threads: 8
