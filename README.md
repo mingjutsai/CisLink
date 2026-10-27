@@ -17,7 +17,7 @@ across cell types, traits and accessibility assays:
 Both are L2-regularized logistic regressions stored as plain JSON (`src/cislink/models/`), so scoring needs only NumPy.
 This is release 1.3. The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
 come from a genome-wide reference of Roadmap Epigenomics tracks, which `cislink build` reads (`cislink reference download`,
-16.3 GB, once). The cell's own data supply everything else.
+16.3 GB, once; [doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)). The cell's own data supply everything else.
 
 ## Install
 
@@ -33,8 +33,11 @@ pixi run test         # unit tests
 With pip:
 
 ```bash
-pip install git+https://github.com/mingjutsai/CisLink.git
+pip install git+https://github.com/mingjutsai/CisLink.git@v1.3.0
 ```
+
+The wheel, sdist and model files of each version are attached to its
+[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.3.0).
 
 ## Tutorial
 
@@ -160,7 +163,11 @@ checks the tag against the package version, and attaches the wheel, sdist and mo
 Tsai, M.-J. *et al.* General models link noncoding variants and cis-regulatory elements to their target genes.
 (2026, in preparation). See `CITATION.cff`.
 
+The Roadmap activity reference ([doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)) is derived from
+Roadmap Epigenomics Consortium *et al.* Integrative analysis of 111 reference human epigenomes. *Nature* 518, 317–330 (2015).
+
 ## License
 
 Code and models: MIT (see `LICENSE`). Data in `data/` come from the ENCODE CRISPR benchmark and from the silver
 standard of Weeks et al. and Gschwind et al.; cite the original studies listed in `data/README.md`.
+The Roadmap activity reference on Zenodo is released under CC-BY 4.0.
