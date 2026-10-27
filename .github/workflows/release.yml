@@ -25,4 +25,9 @@ jobs:
       - name: GitHub release with wheel, sdist and model files
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" dist/* src/cislink/models/*.json --title "CisLink ${GITHUB_REF_NAME}" --generate-notes
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" dist/* src/cislink/models/*.json --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" dist/* src/cislink/models/*.json --title "CisLink ${GITHUB_REF_NAME}" --generate-notes
+          fi
