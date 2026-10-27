@@ -20,8 +20,8 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         env: [py310, py312]
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
         with:
           environments: ${{ matrix.env }}
           cache: true
@@ -35,8 +35,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
         with:
           environments: pipeline
           cache: true
@@ -46,8 +46,8 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
         with:
           cache: true
       - run: pixi run lint
@@ -55,14 +55,14 @@ jobs:
   notebooks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
         with:
           cache: true
       - name: Execute every notebook
         run: pixi run notebooks
       - name: Executed notebooks
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: executed-notebooks
           path: notebooks/*.ipynb
@@ -70,8 +70,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.1
+      - uses: actions/checkout@v7
+      - uses: prefix-dev/setup-pixi@v0.11.2
         with:
           environments: build
           cache: true
@@ -81,7 +81,7 @@ jobs:
           python -m venv /tmp/v && /tmp/v/bin/pip install dist/*.whl
           /tmp/v/bin/cislink info
           /tmp/v/bin/cislink score examples/example_features.tsv --keep ID | head -3
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
