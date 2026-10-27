@@ -1,6 +1,7 @@
 # CisLink
 
 [![CI](https://github.com/mingjutsai/CisLink/actions/workflows/ci.yml/badge.svg)](https://github.com/mingjutsai/CisLink/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23692443.svg)](https://doi.org/10.5281/zenodo.23692443)
 
 **General models that link noncoding variants and cis-regulatory elements to their target genes.**
 
@@ -161,7 +162,8 @@ checks the tag against the package version, and attaches the wheel, sdist and mo
 ## Citation
 
 Tsai, M.-J. *et al.* General models link noncoding variants and cis-regulatory elements to their target genes.
-(2026, in preparation). See `CITATION.cff`.
+(2026, in preparation). See `CITATION.cff`. The software is archived at Zenodo: all versions
+[doi:10.5281/zenodo.23692443](https://doi.org/10.5281/zenodo.23692443); v1.3.1 [doi:10.5281/zenodo.23692444](https://doi.org/10.5281/zenodo.23692444).
 
 The Roadmap activity reference ([doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)) is derived from
 Roadmap Epigenomics Consortium *et al.* Integrative analysis of 111 reference human epigenomes. *Nature* 518, 317–330 (2015).
