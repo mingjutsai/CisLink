@@ -33,11 +33,11 @@ pixi run test         # unit tests
 With pip:
 
 ```bash
-pip install git+https://github.com/mingjutsai/CisLink.git@v1.3.0
+pip install git+https://github.com/mingjutsai/CisLink.git@v1.3.1
 ```
 
 The wheel, sdist and model files of each version are attached to its
-[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.3.0).
+[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.3.1; the models are those of v1.3.0).
 
 ## Tutorial
 
