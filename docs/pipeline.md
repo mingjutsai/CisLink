@@ -12,7 +12,7 @@ Roadmap activity reference; on the manuscript's evaluation sets this code reprod
 ```bash
 pixi install -e pipeline        # adds bedtools, pyBigWig, hic-straw, PyYAML (Linux, macOS)
 pixi install -e macs2           # CrossMap (lifts elements to hg19 for the F1 features) and MACS2
-pixi run cislink reference download --dest /data/cislink_ref    # Roadmap activity reference, 16.3 GB (once)
+pixi run cislink reference download --dest /data/cislink_ref    # Roadmap activity reference, 16.3 GB (once); doi:10.5281/zenodo.23682289
 pixi run -e pipeline cislink build --help
 ```
 
