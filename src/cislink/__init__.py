@@ -2,5 +2,5 @@
 (CisLink-E2G) to their target genes."""
 from .model import MODELS, CisLinkModel, load_model, score
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __all__ = ["MODELS", "CisLinkModel", "load_model", "score", "__version__"]
