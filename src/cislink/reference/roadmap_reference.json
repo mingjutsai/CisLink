@@ -1,10 +1,10 @@
 {
  "title": "CisLink Roadmap activity reference v1 (CisLink v1.3 F1 features)",
  "directory": "roadmap_activity_v1",
- "doi": "10.5281/zenodo.TBD",
- "base_url": null,
+ "doi": "10.5281/zenodo.23682289",
+ "base_url": "https://zenodo.org/records/23682289/files",
  "url_suffix": "?download=1",
- "note": "base_url becomes https://zenodo.org/records/<record>/files once the record is published",
+ "note": "Zenodo record 23682289",
  "extracted_bytes": 16330000000,
  "archives": [
   {
