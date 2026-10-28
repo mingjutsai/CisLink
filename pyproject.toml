@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "cislink"
 version = "1.3.1"
-description = "General models linking noncoding variants (CisLink-V2G) and cis-regulatory elements (CisLink-E2G) to their target genes"
+description = "CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity linking noncoding variants (CisLink-V2G) and cis-regulatory elements (CisLink-E2G) to their target genes"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

@@ -3,7 +3,7 @@
 [![CI](https://github.com/mingjutsai/CisLink/actions/workflows/ci.yml/badge.svg)](https://github.com/mingjutsai/CisLink/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23692443.svg)](https://doi.org/10.5281/zenodo.23692443)
 
-**General models that link noncoding variants and cis-regulatory elements to their target genes.**
+**CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity that link noncoding variants and cis-regulatory elements to their target genes.**
 
 CisLink has two models, both trained once on 10,250 CRISPR-tested element–gene pairs in K562 cells and applied
 across cell types, traits and accessibility assays:
@@ -161,7 +161,7 @@ checks the tag against the package version, and attaches the wheel, sdist and mo
 
 ## Citation
 
-Tsai, M.-J. *et al.* General models link noncoding variants and cis-regulatory elements to their target genes.
+Tsai, M.-J. *et al.* CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity link noncoding variants and cis-regulatory elements to their target genes.
 (2026, in preparation). See `CITATION.cff`. The software is archived at Zenodo: all versions
 [doi:10.5281/zenodo.23692443](https://doi.org/10.5281/zenodo.23692443); v1.3.1 [doi:10.5281/zenodo.23692444](https://doi.org/10.5281/zenodo.23692444).
 
