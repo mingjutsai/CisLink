@@ -1,4 +1,4 @@
-"""Locus-level evaluation of variant-to-gene methods at GWAS loci (Supplementary Note 1).
+"""Locus-level evaluation of variant-to-gene methods at GWAS loci (Supplementary Note 5).
 
 A locus (credible set) has candidate genes with one score column per method and a boolean target column.
 * Top-1 accuracy: the share of targets among the genes tied for first, averaged over loci. A method whose highest
