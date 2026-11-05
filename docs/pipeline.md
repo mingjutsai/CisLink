@@ -1,7 +1,7 @@
 # Computing features for a new cell type
 
-`cislink build` turns a cell type's raw data into the harmonized feature table the models score (CisLink v1.3:
-CisLink-E2G 40 features, CisLink-V2G 16). It reproduces the pipeline used for the manuscript: on the eBMD variants of
+`cislink build` turns a cell type's raw data into the harmonized feature table the models score (CisLink v1.3
+models, named CisLink-Extended, 40 features, and CisLink-Base, 16, since 1.4.0). It reproduces the pipeline used for the manuscript: on the eBMD variants of
 chromosome 22 (13,243 variant–transcript rows, osteoblasts), the cell-derived features matched the published matrix
 (relative difference < 1e-4). The v1.3 cross-epigenome correlations (F1) are computed by `cislink.roadmap` from the
 Roadmap activity reference; on the manuscript's evaluation sets this code reproduces the reference F1 values exactly
@@ -72,13 +72,13 @@ self-quantified sample against a published quantification of the same library be
 | Chromatin tracks: `accessibility` (ATAC-seq or DNase-seq), 11 histone marks, `CTCF` | `{mark}_Enh`, `{mark}_Prom` | bedGraph (through `bedtools`) or bigWig; signal or -log10 P, as the cell's tracks come |
 | Candidate elements of the cell | quantile mapping of chromatin to K562 | BED (chrom, start, end, activity), or an accessibility -log10 P bedGraph to call them |
 | Transcript and gene quantifications | `Tx_expression`, `Gene_expression` | ENCODE RSEM TSVs (`transcript_id` / `gene_id`, `TPM`) |
-| The cell's Hi-C (CisLink-E2G only) | `HiC_Contact` | `.hic` |
+| The cell's Hi-C (CisLink-Extended only) | `HiC_Contact` | `.hic` |
 | Multi-tissue Hi-C megamap (CisLink-V2G) | `HiC_megamap_oe` | `.hic` path or URL (default: the ENCODE-rE2G megamap) |
 | Roadmap activity reference (both models) | `F1_dnase`, `F1_h3k27ac` | directory from `cislink reference download` (`--roadmap-ref`, `$CISLINK_ROADMAP_REF` or `roadmap_reference:`) |
 | CrossMap (both models) | GRCh38 → hg19 lift of elements for F1 | executable (`pixi install -e macs2`; `--crossmap` or `crossmap:`) |
 
-CisLink-V2G needs only accessibility, expression, the megamap and the Roadmap reference; leave the histone tracks and
-`hic` out to build V2G features only (E2G is then not scored). The reference is the same for every cell type.
+CisLink-Base needs only accessibility, expression, the megamap and the Roadmap reference; leave the histone tracks and
+`hic` out to build CisLink-Base features only (CisLink-Extended is then not scored). The reference is the same for every cell type.
 
 ## Input formats
 
@@ -116,7 +116,7 @@ tracks:
   H3K4me1: osteoblast_H3K4me1.bigWig
   # ... H4K20me1, H3K9me3, H3K9ac, H3K79me2, H3K4me3, H3K4me2, H3K36me3, H3K27me3, H2A.Z, CTCF
 candidates: osteoblast_candidates.bed       # or: accessibility_pvalue: osteoblast_ATAC_pval.bedGraph
-hic: osteoblast.hic                         # omit for V2G only
+hic: osteoblast.hic                         # omit for CisLink-Base only
 hic_resolution: 2500                        # the map's finest reliable resolution (5000 for most maps)
 hic_norm: KR
 # map_hic: true                             # default: true for maps finer than 5 kb, false at 5 kb
@@ -129,7 +129,7 @@ threads: 8
 
 See `examples/config.example.yaml`.
 
-The first run computes the cell's chromatin quantiles (over its candidate elements) and, for E2G, its Hi-C quantiles,
+The first run computes the cell's chromatin quantiles (over its candidate elements) and, for CisLink-Extended, its Hi-C quantiles,
 and saves them next to the output (`OUT.chromatin_quantiles.tsv`, `OUT.hic_quantiles.tsv`). Point later runs of the
 same cell at them to skip that step:
 
@@ -206,5 +206,5 @@ epigenome's other marks, which would make the correlation partly circular.
 ## Reading the output
 
 Rank genes per variant or element with `cislink rank`. Scores are probabilities on the scale of the K562 CRISPR
-training pairs; compare them with the recall-based thresholds (E2G 0.195, V2G 0.147 at 70% recall) rather than
+training pairs; compare them with the recall-based thresholds (CisLink-Extended 0.195, CisLink-Base 0.147 at 70% recall) rather than
 reading them as absolute probabilities (notebook 04).

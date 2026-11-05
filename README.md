@@ -6,17 +6,20 @@
 **CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity that link noncoding variants and cis-regulatory elements to their target genes.**
 
 CisLink has two models, both trained once on 10,250 CRISPR-tested element–gene pairs in K562 cells and applied
-across cell types, traits and accessibility assays:
+across cell types, traits and accessibility assays. As with ENCODE-rE2G and ENCODE-rE2G Extended, they differ in the
+data they need: **CisLink-Extended** is the full model for cell types with histone marks and their own Hi-C, and
+**CisLink-Base** needs only accessibility and RNA. Both score element–gene pairs and every variant–gene pair, whether or
+not the variant lies in a peak.
 
-| | **CisLink-E2G** | **CisLink-V2G** |
+| | **CisLink-Extended** | **CisLink-Base** |
 |---|---|---|
-| Question | Which elements regulate which genes in this cell? | Which gene does this GWAS variant regulate? |
+| Use when the cell type has | accessibility, histone marks, RNA-seq and Hi-C | accessibility and RNA-seq only |
 | Inputs (features) | accessibility, 11 histone marks, CTCF, expression, the cell's own Hi-C, distance and gene context, cross-epigenome activity–expression correlations, distance × accessibility (40) | accessibility, expression, multi-tissue Hi-C megamap, distance and gene context, cross-epigenome correlations, distance × accessibility (16) |
 | Needs | ATAC-seq or DNase-seq, histone ChIP-seq, RNA-seq, Hi-C; the Roadmap reference | ATAC-seq or DNase-seq, RNA-seq; the Roadmap reference |
-| Use it to | map enhancer–gene links, especially for elements 10–50 kb from the gene; rank elements for CRISPR follow-up | score every fine-mapped variant at a GWAS locus, in a peak or not, and call a gene at every locus |
+| Strengths | the more accurate model on CRISPR data in cell types not used for training, especially for elements 10–50 kb from the gene | at GWAS loci at least as accurate as CisLink-Extended; the model we report there |
 
 Both are L2-regularized logistic regressions stored as plain JSON (`src/cislink/models/`), so scoring needs only NumPy.
-This is release 1.3. The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
+The models are those of release 1.3 (see `CHANGELOG.md`). The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
 come from a genome-wide reference of Roadmap Epigenomics tracks, which `cislink build` reads (`cislink reference download`,
 16.3 GB, once; [doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)). The cell's own data supply everything else.
 
@@ -34,11 +37,11 @@ pixi run test         # unit tests
 With pip:
 
 ```bash
-pip install git+https://github.com/mingjutsai/CisLink.git@v1.3.1
+pip install git+https://github.com/mingjutsai/CisLink.git@v1.4.0
 ```
 
 The wheel, sdist and model files of each version are attached to its
-[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.3.1; the models are those of v1.3.0).
+[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.4.0).
 
 ## Tutorial
 
@@ -52,9 +55,9 @@ import pandas as pd
 from cislink import load_model, score
 
 x = pd.read_csv("examples/example_features.tsv", sep="\t")
-s = score(x)                                  # adds CisLink-E2G and CisLink-V2G columns
-e2g = load_model("e2g")
-s["E2G link"] = s["CisLink-E2G"] >= e2g.threshold(70)
+s = score(x)                                  # adds CisLink-Extended and CisLink-Base columns
+ext = load_model("extended")
+s["Extended link"] = s["CisLink-Extended"] >= ext.threshold(70)
 ```
 
 From the shell:
@@ -74,8 +77,8 @@ score at which held-out K562 CRISPR pairs reach a given recall:
 
 | | 70% recall | 50% recall |
 |---|---|---|
-| CisLink-E2G | 0.195 | 0.493 |
-| CisLink-V2G | 0.147 | 0.402 |
+| CisLink-Extended | 0.195 | 0.493 |
+| CisLink-Base | 0.147 | 0.402 |
 
 The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 04); the 70%-recall
 threshold kept 54–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
@@ -117,12 +120,12 @@ x = hz.harmonize_chromatin(x, cell_q, enh_len=enh_lengths, prom_len=prom_lengths
 # expression: protein-coding TPM
 x = hz.harmonize_expression(x, hz.expression_factors(gene_pc_tpm_sum, transcript_pc_tpm_sum))
 
-# Hi-C (CisLink-E2G): observed/expected, mapped onto K562 5 kb within 16 distance strata
+# Hi-C (CisLink-Extended): observed/expected, mapped onto K562 5 kb within 16 distance strata
 hic_q = hz.hic_quantiles(sampled_oe, sampled_bin_distance)
 x["HiC_Contact"] = hz.harmonize_hic(x.HiC_Contact, bin_distance, hic_q)
 ```
 
-Distance and gene-context features are defined in `docs/features.md`. CisLink-V2G uses the multi-tissue Hi-C
+Distance and gene-context features are defined in `docs/features.md`. CisLink-Base uses the multi-tissue Hi-C
 megamap recommended by ENCODE-rE2G for cell types without Hi-C (`HiC_megamap_oe`).
 
 ## Reproducible analyses
@@ -142,9 +145,9 @@ pixi run lab          # open the notebooks
 pixi run notebooks    # re-execute all of them
 ```
 
-Key results: on held-out K562 CRISPR pairs, CisLink-E2G AUPRC 0.700 (ENCODE-rE2G Extended 0.678, CisLink-V2G 0.603,
+Key results: on held-out K562 CRISPR pairs, CisLink-Extended AUPRC 0.700 (ENCODE-rE2G Extended 0.678, CisLink-Base 0.603,
 distance 0.366), and 0.689 against 0.158 for distance 50–200 kb from the TSS; on the 568 silver-standard credible
-sets, CisLink-V2G ranks the silver gene first in 53.7% (nearest gene 52.9%, L2G 44.7%, PoPS 37.2%, ENCODE-rE2G 16.4%).
+sets, CisLink-Base ranks the silver gene first in 53.7% (nearest gene 52.9%, L2G 44.7%, PoPS 37.2%, ENCODE-rE2G 16.4%).
 
 ## Development
 
@@ -163,7 +166,7 @@ checks the tag against the package version, and attaches the wheel, sdist and mo
 
 Tsai, M.-J. *et al.* CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity link noncoding variants and cis-regulatory elements to their target genes.
 (2026, in preparation). See `CITATION.cff`. The software is archived at Zenodo: all versions
-[doi:10.5281/zenodo.23692443](https://doi.org/10.5281/zenodo.23692443); v1.3.1 [doi:10.5281/zenodo.23692444](https://doi.org/10.5281/zenodo.23692444).
+[doi:10.5281/zenodo.23692443](https://doi.org/10.5281/zenodo.23692443). [CHANGELOG.md](CHANGELOG.md) lists each version.
 
 The Roadmap activity reference ([doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)) is derived from
 Roadmap Epigenomics Consortium *et al.* Integrative analysis of 111 reference human epigenomes. *Nature* 518, 317–330 (2015).
