@@ -1,6 +1,6 @@
 {
- "name": "CisLink-V2G",
- "description": "Variant-to-gene model: accessibility, expression, multi-tissue Hi-C megamap, distance and gene context, cross-epigenome activity-expression correlations (Roadmap reference) and distance x accessibility; scores every variant window.",
+ "name": "CisLink-Base",
+ "description": "Model for cell types with limited data: accessibility and expression with a multi-tissue Hi-C megamap, distance and gene context, cross-epigenome activity-expression correlations (Roadmap reference) and distance x accessibility.",
  "version": "1.3.0",
  "features": [
   "Accessibility_Enh",

@@ -97,7 +97,7 @@ def _build(a) -> int:
     if a.score:
         for m in MODELS:
             model = load_model(m)
-            if m == "e2g" and cfg.get("hic") is None:
+            if m == "extended" and cfg.get("hic") is None:
                 continue
             out[model.name] = model.predict(out)
     out.to_csv(a.output, sep="\t", index=False, float_format="%.8g")
@@ -155,7 +155,7 @@ def _rank(a) -> int:
     """Pair scores (maximum over a gene's transcript rows) and gene ranks per variant or element."""
     t = pd.read_csv(a.input, sep="\t", low_memory=False)
     key = "SNPID" if "SNPID" in t else "element"
-    cols = [c for c in ("CisLink-E2G", "CisLink-V2G") if c in t]
+    cols = [c for c in ("CisLink-Extended", "CisLink-Base") if c in t]
     if not cols:
         raise SystemExit("no CisLink score columns; run 'cislink score' or 'cislink build --score' first")
     p = t.groupby([key, "gene"], sort=False).agg({**{c: "max" for c in cols}, "distance": "min"}).reset_index()
@@ -186,7 +186,8 @@ def main(argv=None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("score", help="score a harmonized feature table")
     s.add_argument("input", help="feature table (TSV by default) with the model's feature columns")
-    s.add_argument("-m", "--model", nargs="+", default=list(MODELS), choices=MODELS)
+    s.add_argument("-m", "--model", nargs="+", default=list(MODELS), choices=MODELS,
+                   help="extended (full model) and/or base (accessibility and RNA only)")
     s.add_argument("-o", "--output", help="output TSV (default stdout)")
     s.add_argument("--sep", default="\t")
     s.add_argument("--keep", help="comma-separated columns to keep with the scores (default: all)")
@@ -202,7 +203,7 @@ def main(argv=None) -> int:
     b = sub.add_parser("build", help="compute harmonized features from a cell type's raw data (see docs/pipeline.md)")
     inputs_args(b)
     b.add_argument("--max-distance", type=int, default=1_000_000)
-    b.add_argument("--score", action="store_true", help="also add CisLink-V2G (and CisLink-E2G when the config has Hi-C) scores")
+    b.add_argument("--score", action="store_true", help="also add CisLink-Base (and CisLink-Extended when the config has Hi-C) scores")
     b.add_argument("--roadmap-ref", help="Roadmap activity reference directory (cislink reference download); default $CISLINK_ROADMAP_REF "
                                          "or 'roadmap_reference' in the config")
     b.add_argument("--crossmap", help="CrossMap executable for the GRCh38 -> hg19 lift of the F1 features (default: config 'crossmap' or CrossMap)")

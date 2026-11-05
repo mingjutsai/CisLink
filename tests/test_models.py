@@ -15,7 +15,7 @@ def test_models_load():
     for m in MODELS:
         model = load_model(m)
         assert len(model.features) == len(model.coef) == len(model.scaler_mean)
-    assert len(load_model("e2g").features) == 40 and len(load_model("CisLink-V2G").features) == 16
+    assert len(load_model("extended").features) == 40 and len(load_model("CisLink-Base").features) == 16
 
 
 def test_matches_sklearn_pipeline():
@@ -41,8 +41,8 @@ def test_matches_sklearn_pipeline():
 def test_reproduces_reference_scores(cell):
     p = pd.read_csv(f"{DATA}/{cell}_heldout.pairs.tsv.gz", sep="\t")
     f = pd.read_csv(f"{DATA}/{cell}_heldout.features.tsv.gz", sep="\t")
-    for m, ref in (("e2g", "reference CisLink-E2G"), ("v2g", "reference CisLink-V2G")):
-        if p[ref].isna().all():   # WTC11: no histone marks, CisLink-E2G not scored
+    for m, ref in (("extended", "reference CisLink-Extended"), ("base", "reference CisLink-Base")):
+        if p[ref].isna().all():   # WTC11: no histone marks, CisLink-Extended not scored
             continue
         s = pd.Series(load_model(m).predict(f), index=f.ID).groupby(level=0).max()
         assert np.allclose(p.ID.map(s).values, p[ref].values, atol=1e-5)
@@ -54,47 +54,47 @@ def test_crispr_manuscript_numbers():
 
     from cislink import datasets
     want = {"HCT116": (0.750, 0.513), "GM12878": (0.913, 0.880), "WTC11": (None, 0.429)}
-    for cell, (e2g, v2g) in want.items():
+    for cell, (ext, bas) in want.items():
         p = datasets.crispr_pairs(cell, path=DATA)
-        assert round(ap(p.label, p["CisLink-V2G"]), 3) == v2g
-        if e2g is None:
-            assert p["CisLink-E2G"].isna().all()
+        assert round(ap(p.label, p["CisLink-Base"]), 3) == bas
+        if ext is None:
+            assert p["CisLink-Extended"].isna().all()
         else:
-            assert round(ap(p.label, p["CisLink-E2G"]), 3) == e2g
+            assert round(ap(p.label, p["CisLink-Extended"]), 3) == ext
 
 
 def test_missing_feature_raises():
     x = pd.read_csv("examples/example_features.tsv", sep="\t").drop(columns=["H3K27ac_Enh"])
     with pytest.raises(KeyError):
-        load_model("e2g").predict(x)
-    load_model("v2g").predict(x)  # V2G does not use histone marks
+        load_model("extended").predict(x)
+    load_model("base").predict(x)  # CisLink-Base does not use histone marks
 
 
 def test_missing_hic_is_zero():
     x = pd.read_csv("examples/example_features.tsv", sep="\t")
     y = x.copy(); y["HiC_Contact"] = np.nan; z = x.copy(); z["HiC_Contact"] = 0.0
-    assert np.allclose(load_model("e2g").predict(y), load_model("e2g").predict(z))
+    assert np.allclose(load_model("extended").predict(y), load_model("extended").predict(z))
 
 
 def test_contributions_sum_to_logit():
-    x = pd.read_csv("examples/example_features.tsv", sep="\t"); m = load_model("e2g")
+    x = pd.read_csv("examples/example_features.tsv", sep="\t"); m = load_model("extended")
     assert np.allclose(m.contributions(x).sum(axis=1) + m.intercept, m.decision_function(x))
 
 
 def test_score_and_cli(tmp_path):
     x = pd.read_csv("examples/example_features.tsv", sep="\t")
     s = score(x)
-    assert {"CisLink-E2G", "CisLink-V2G"} <= set(s.columns) and s["CisLink-E2G"].between(0, 1).all()
+    assert {"CisLink-Extended", "CisLink-Base"} <= set(s.columns) and s["CisLink-Extended"].between(0, 1).all()
     out = tmp_path / "s.tsv"
     assert main(["score", "examples/example_features.tsv", "-o", str(out), "--keep", "ID", "--threshold", "70"]) == 0
     t = pd.read_csv(out, sep="\t")
-    assert list(t.columns[:3]) == ["ID", "CisLink-E2G", "CisLink-E2G >= 70% recall threshold"]
-    assert np.allclose(t["CisLink-E2G"], s["CisLink-E2G"], atol=1e-6)
+    assert list(t.columns[:3]) == ["ID", "CisLink-Extended", "CisLink-Extended >= 70% recall threshold"]
+    assert np.allclose(t["CisLink-Extended"], s["CisLink-Extended"], atol=1e-6)
 
 
 def test_released_version_and_thresholds():
-    """CisLink v1.3: the frozen models (source hashes) and the manuscript's 70% / 50% recall thresholds."""
-    e, v = load_model("e2g"), load_model("v2g")
+    """CisLink v1.3 models (renamed in 1.4.0, unchanged): the frozen models (source hashes) and the manuscript's 70% / 50% recall thresholds."""
+    e, v = load_model("extended"), load_model("base")
     assert e.meta["version"] == v.meta["version"] == "1.3.0"
     assert e.meta["source_sha256"].startswith("2a1fad0e") and v.meta["source_sha256"].startswith("95977c92")
     assert (e.threshold(70), e.threshold(50), v.threshold(70), v.threshold(50)) == (0.195, 0.493, 0.147, 0.402)
@@ -105,7 +105,7 @@ def test_k562_heldout_auprc():
 
     from cislink import datasets
     p = datasets.crispr_pairs("K562", path=DATA)
-    assert (round(ap(p.label, p["CisLink-E2G"]), 3), round(ap(p.label, p["CisLink-V2G"]), 3)) == (0.700, 0.603)
+    assert (round(ap(p.label, p["CisLink-Extended"]), 3), round(ap(p.label, p["CisLink-Base"]), 3)) == (0.700, 0.603)
 
 
 def test_dxa_is_derived_and_f1_missing_is_zero():
@@ -117,7 +117,7 @@ def test_dxa_is_derived_and_f1_missing_is_zero():
         y = x.copy(); y["F1_dnase"] = np.nan; z = x.copy(); z["F1_dnase"] = 0.0
         assert np.allclose(model.predict(y), model.predict(z))
     with pytest.raises(KeyError, match="add-f1"):
-        load_model("v2g").predict(x.drop(columns=["F1_dnase", "F1_h3k27ac"]))
+        load_model("base").predict(x.drop(columns=["F1_dnase", "F1_h3k27ac"]))
 
 
 def test_legacy_accessibility_columns():
@@ -125,3 +125,4 @@ def test_legacy_accessibility_columns():
     old = x.rename(columns={"Accessibility_Enh": "DNase_Enh", "Accessibility_Prom": "DNase_Prom"})
     for m in MODELS:
         assert np.array_equal(load_model(m).predict(x), load_model(m).predict(old))
+

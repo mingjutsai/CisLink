@@ -18,7 +18,7 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
-MODELS = ("e2g", "v2g")
+MODELS = ("extended", "base")
 # Hi-C contact is missing where a map has no record, and F1 where an element or gene has no Roadmap data; the models
 # were trained with these filled by 0.
 FILL_ZERO = ("HiC_Contact", "HiC_megamap_oe", "F1_dnase", "F1_h3k27ac")
@@ -95,7 +95,8 @@ class CisLinkModel:
 
 
 def load_model(name: str) -> CisLinkModel:
-    """Load a packaged model: 'e2g' (CisLink-E2G) or 'v2g' (CisLink-V2G)."""
+    """Load a packaged model: 'extended' (CisLink-Extended, the full model) or 'base' (CisLink-Base, for cell types
+    without histone marks or the cell's own Hi-C)."""
     key = name.lower().replace("cislink-", "")
     if key not in MODELS:
         raise ValueError(f"unknown model {name!r}; choose from {MODELS}")
@@ -104,7 +105,7 @@ def load_model(name: str) -> CisLinkModel:
 
 
 def score(table: pd.DataFrame, models: Iterable[str] = MODELS) -> pd.DataFrame:
-    """Add a score column per model ('CisLink-E2G', 'CisLink-V2G') to a copy of the table."""
+    """Add a score column per model ('CisLink-Extended', 'CisLink-Base') to a copy of the table."""
     out = table.copy()
     for m in models:
         model = load_model(m)

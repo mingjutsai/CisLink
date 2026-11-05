@@ -17,7 +17,7 @@ tracks:                       # bedGraph or bigWig; any subset (missing marks ar
   H2A.Z: H2A.Z.bigWig
   CTCF: CTCF.bigWig
 candidates: candidates.bed    # chrom, start, end, activity; or set accessibility_pvalue: ATAC_pval.bedGraph instead
-hic: cell.hic                 # the cell's Hi-C for CisLink-E2G; omit for CisLink-V2G only
+hic: cell.hic                 # the cell's Hi-C for CisLink-Extended; omit for CisLink-Base only
 hic_resolution: 5000
 hic_norm: KR             # SCALE for ENCODE intact Hi-C
 # map_hic: false         # default: true only when hic_resolution < 5000 (finer than the training maps)

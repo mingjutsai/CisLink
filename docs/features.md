@@ -2,8 +2,8 @@
 
 Both models take one row per element–gene (or variant–gene) pair with the columns below. Signals are summed over the
 element (or the ±250-bp variant window) and over a ±250-bp promoter window around each GENCODE v29 TSS, then
-harmonized to the K562 scale (`cislink.harmonize`). E2G uses the 40 features with an E2G coefficient; V2G uses the 16
-with a V2G coefficient. Accessibility comes from ATAC-seq or DNase-seq; the earlier column names `DNase_Enh` and
+harmonized to the K562 scale (`cislink.harmonize`). CisLink-Extended uses the 40 features with an Extended coefficient;
+CisLink-Base uses the 16 with a Base coefficient. Accessibility comes from ATAC-seq or DNase-seq; the earlier column names `DNase_Enh` and
 `DNase_Prom` are still accepted.
 
 Three features are new in v1.3:
@@ -18,7 +18,7 @@ Three features are new in v1.3:
 Missing Hi-C contact and missing F1 (an element that does not lift to hg19, or a gene without Roadmap RNA-seq) are
 treated as 0, as in training; any other missing value is an error.
 
-| Column | Label | Group | Definition | Harmonization | E2G coef. | V2G coef. |
+| Column | Label | Group | Definition | Harmonization | Extended coef. | Base coef. |
 |---|---|---|---|---|---|---|
 | `Accessibility_Enh` | Accessibility (element) | accessibility | accessibility (DNase-seq or ATAC-seq) summed over the element | quantile-mapped to K562 over genome-wide candidate elements | +0.346 | +0.617 |
 | `Accessibility_Prom` | Accessibility (promoter) | accessibility | accessibility over the ±250-bp promoter window | quantile-mapped to K562 over genome-wide candidate elements | -0.129 | -0.459 |

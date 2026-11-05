@@ -11,7 +11,7 @@ The steps reproduce the pipeline used for the manuscript:
    elements; expression as protein-coding TPM; Hi-C observed/expected mapped within distance strata.
 4. **Distance and gene context**: distance, log distance, element length, power-law contact, genes between element
    and TSS, distance rank of the gene, nearest-gene status, ubiquitously expressed gene.
-5. **Hi-C**: the cell's own map (CisLink-E2G, ``HiC_Contact``) and the multi-tissue megamap (CisLink-V2G,
+5. **Hi-C**: the cell's own map (CisLink-Extended, ``HiC_Contact``) and the multi-tissue megamap (CisLink-Base,
    ``HiC_megamap_oe``), observed/expected between the element-midpoint bin and the TSS bin.
 6. **Cross-epigenome correlations** (``F1_dnase``, ``F1_h3k27ac``): ``cislink.roadmap``, from the Roadmap activity
    reference; ``DxA`` is computed when scoring.
@@ -329,10 +329,10 @@ def build_features(rows: pd.DataFrame, *, gtf, tracks: dict[str, str], transcrip
     """Harmonized feature table for ``rows`` (from ``variant_pairs`` or ``element_pairs``); add the v1.3 cross-epigenome
     correlations with ``cislink.roadmap.add_f1`` (as ``cislink build`` does) before scoring.
 
-    ``hic``: the cell's .hic for CisLink-E2G (omit for V2G only). ``map_hic``: map the cell's O/E onto K562 within
+    ``hic``: the cell's .hic for CisLink-Extended (omit for CisLink-Base only). ``map_hic``: map the cell's O/E onto K562 within
     distance strata; default (None): only for maps finer than the training 5 kb (the manuscript's rule: the lab's 2-2.5-kb
     maps were mapped, 5-kb maps used directly). ``megamap``: .hic path or URL of
-    the multi-tissue megamap for CisLink-V2G (``None`` to skip)."""
+    the multi-tissue megamap for CisLink-Base (``None`` to skip)."""
     tracks = normalize_tracks(tracks)
     if map_hic is None:
         map_hic = hic_resolution < HIC_BIN
