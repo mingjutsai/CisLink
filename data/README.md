@@ -32,8 +32,8 @@ follow `docs/features.md`. Distance baseline = negative element–TSS distance.
 
 Every protein-coding candidate gene within 1 Mb of the 568 noncoding UK Biobank credible sets for 31 traits whose one gene within
 2 Mb carries an independent coding variant for the same trait (the silver gene; Weeks et al. 2023, Gschwind et al.;
-github.com/Deylab999MSKCC/e2g-benchmarking), as in Supplementary Table 6. Each trait is scored in its matched cell type (osteoblast, K562, CD4+ T cell, CD14+
-monocyte, HepG2, kidney or IMR-90; Supplementary Table 1 lists the inputs). Columns: trait, cell type scored, credible set,
+github.com/Deylab999MSKCC/e2g-benchmarking), as in Supplementary Table 12. Each trait is scored in its matched cell type (osteoblast, K562, CD4+ T cell, CD14+
+monocyte, HepG2, kidney or IMR-90; Supplementary Table 11 lists the inputs). Columns: trait, cell type scored, credible set,
 fine-mapping region, candidate gene, silver-gene flag, CisLink-Base and CisLink-Extended (maximum over the set's variants
 with PIP > 0.1), the nearest-gene baseline (negative distance from the highest-probability variant to the gene's nearest
 protein-coding TSS, GENCODE v29 on GRCh38), the published
