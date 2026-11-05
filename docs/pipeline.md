@@ -73,7 +73,7 @@ self-quantified sample against a published quantification of the same library be
 | Candidate elements of the cell | quantile mapping of chromatin to K562 | BED (chrom, start, end, activity), or an accessibility -log10 P bedGraph to call them |
 | Transcript and gene quantifications | `Tx_expression`, `Gene_expression` | ENCODE RSEM TSVs (`transcript_id` / `gene_id`, `TPM`) |
 | The cell's Hi-C (CisLink-Extended only) | `HiC_Contact` | `.hic` |
-| Multi-tissue Hi-C megamap (CisLink-V2G) | `HiC_megamap_oe` | `.hic` path or URL (default: the ENCODE-rE2G megamap) |
+| Multi-tissue Hi-C megamap (CisLink-Base) | `HiC_megamap_oe` | `.hic` path or URL (default: the ENCODE-rE2G megamap) |
 | Roadmap activity reference (both models) | `F1_dnase`, `F1_h3k27ac` | directory from `cislink reference download` (`--roadmap-ref`, `$CISLINK_ROADMAP_REF` or `roadmap_reference:`) |
 | CrossMap (both models) | GRCh38 → hg19 lift of elements for F1 | executable (`pixi install -e macs2`; `--crossmap` or `crossmap:`) |
 
