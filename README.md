@@ -164,7 +164,7 @@ checks the tag against the package version, and attaches the wheel, sdist and mo
 
 ## Citation
 
-Tsai, M.-J. *et al.* CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity link noncoding variants and cis-regulatory elements to their target genes.
+Tsai, M.-J. *et al.* CRISPR-trained chromatin models link noncoding variants and regulatory elements to target genes across cell types.
 (2026, in preparation). See `CITATION.cff`. The software is archived at Zenodo: all versions
 [doi:10.5281/zenodo.23692443](https://doi.org/10.5281/zenodo.23692443). [CHANGELOG.md](CHANGELOG.md) lists each version.
 

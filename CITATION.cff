@@ -13,7 +13,7 @@ authors:
     given-names: Yi-Hsiang
 preferred-citation:
   type: article
-  title: "CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity link noncoding variants and cis-regulatory elements to their target genes"
+  title: "CRISPR-trained chromatin models link noncoding variants and regulatory elements to target genes across cell types"
   authors:
     - family-names: Tsai
       given-names: Ming-Ju
