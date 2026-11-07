@@ -93,7 +93,8 @@ def test_score_and_cli(tmp_path):
 
 
 def test_released_version_and_thresholds():
-    """CisLink v1.3 models (renamed in 1.4.0, unchanged): the frozen models (source hashes) and the 70% / 50% recall thresholds from cross-validated training predictions."""
+    """CisLink v1.3 models (renamed in 1.4.0, unchanged): the frozen models (source hashes) and the 70% / 50% recall
+    thresholds from cross-validated training predictions."""
     e, v = load_model("extended"), load_model("base")
     assert e.meta["version"] == v.meta["version"] == "1.3.0"
     assert e.meta["source_sha256"].startswith("2a1fad0e") and v.meta["source_sha256"].startswith("95977c92")
