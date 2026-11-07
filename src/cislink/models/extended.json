@@ -182,9 +182,9 @@
   "positives": 469
  },
  "thresholds": {
-  "recall_70": 0.195,
-  "recall_50": 0.493,
-  "note": "score at which held-out K562 CRISPR pairs reach the given recall"
+  "recall_70": 0.269,
+  "recall_50": 0.565,
+  "note": "score at which cross-validated predictions on the K562 CRISPR training pairs reach the given recall (chromosome-grouped five-fold), as in ENCODE-rE2G"
  },
  "source_sha256": "2a1fad0e8d488db93b7f7a1da8dccb22bd1c9a0ac6714be9397c7e37e7192ed2",
  "exported_with_sklearn": "1.2.2"
