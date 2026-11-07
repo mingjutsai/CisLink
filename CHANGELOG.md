@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 (2026-11-07)
 
 Recall-based thresholds are set as in ENCODE-rE2G, on cross-validated predictions for the K562 CRISPR training pairs
 (chromosome-grouped five-fold, final regularization), instead of on held-out K562 pairs. Coefficients, standardization,

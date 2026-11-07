@@ -2958,8 +2958,8 @@ packages:
   timestamp: 1790766070886
 - pypi: ./
   name: cislink
-  version: 1.4.0
-  sha256: 55cb01d5a5d2b161776b58dc210795c5547266eddf79bd4bbafbf3cdfc478e5a
+  version: 1.5.0
+  sha256: 9259d57f1c7d922391813cd3c466544e440ee594b3205d6172bcc582e2c82b09
   requires_dist:
   - numpy>=1.23
   - pandas>=1.5
