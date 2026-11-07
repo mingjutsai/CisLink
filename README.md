@@ -73,15 +73,16 @@ When a gene has several transcripts (several rows per pair), take the maximum ov
 
 Scores are probabilities on the scale of the K562 CRISPR training pairs (4.6% positive); they are not absolute
 probabilities in a new cell type. Use them to **rank** candidates, or against the **recall-based thresholds**, the
-score at which held-out K562 CRISPR pairs reach a given recall:
+score at which cross-validated predictions on the K562 CRISPR training pairs reach a given recall, as in
+ENCODE-rE2G:
 
 | | 70% recall | 50% recall |
 |---|---|---|
-| CisLink-Extended | 0.195 | 0.493 |
-| CisLink-Base | 0.147 | 0.402 |
+| CisLink-Extended | 0.269 | 0.565 |
+| CisLink-Base | 0.230 | 0.476 |
 
 The scale transfers to HCT116 and GM12878 but scores are overconfident in osteoblasts (notebook 04); the 70%-recall
-threshold kept 54–97% recall across cell types. `model.contributions(table)` gives each feature's contribution to the
+threshold kept 49–94% recall in other cell types. `model.contributions(table)` gives each feature's contribution to the
 log-odds of a pair.
 
 ### 3. Build features for a new cell type

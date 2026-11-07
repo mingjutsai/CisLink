@@ -90,7 +90,7 @@ class CisLinkModel:
         return pd.DataFrame(z * self.coef, columns=list(self.features), index=table.index)
 
     def threshold(self, recall: int = 70) -> float:
-        """Score at which held-out K562 CRISPR pairs reach the given recall (70 or 50)."""
+        """Score at which cross-validated predictions on the K562 training pairs reach the given recall (70 or 50)."""
         return float(self.thresholds[f"recall_{recall}"])
 
 

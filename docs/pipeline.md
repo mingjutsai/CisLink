@@ -206,5 +206,5 @@ epigenome's other marks, which would make the correlation partly circular.
 ## Reading the output
 
 Rank genes per variant or element with `cislink rank`. Scores are probabilities on the scale of the K562 CRISPR
-training pairs; compare them with the recall-based thresholds (CisLink-Extended 0.195, CisLink-Base 0.147 at 70% recall) rather than
+training pairs; compare them with the recall-based thresholds (CisLink-Extended 0.269, CisLink-Base 0.230 at 70% recall) rather than
 reading them as absolute probabilities (notebook 04).
