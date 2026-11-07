@@ -19,7 +19,7 @@ not the variant lies in a peak.
 | Strengths | the more accurate model on CRISPR data in cell types not used for training, especially for elements 10–50 kb from the gene | at GWAS loci at least as accurate as CisLink-Extended; the model we report there |
 
 Both are L2-regularized logistic regressions stored as plain JSON (`src/cislink/models/`), so scoring needs only NumPy.
-The models are those of release 1.3 (see `CHANGELOG.md`). The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
+The model coefficients are those of release 1.3; release 1.5 sets the recall-based thresholds on cross-validated training predictions (see `CHANGELOG.md`). The cross-epigenome correlations (`F1_dnase`, `F1_h3k27ac`) do not depend on the scored cell. They
 come from a genome-wide reference of Roadmap Epigenomics tracks, which `cislink build` reads (`cislink reference download`,
 16.3 GB, once; [doi:10.5281/zenodo.23682289](https://doi.org/10.5281/zenodo.23682289)). The cell's own data supply everything else.
 
@@ -37,11 +37,11 @@ pixi run test         # unit tests
 With pip:
 
 ```bash
-pip install git+https://github.com/mingjutsai/CisLink.git@v1.4.0
+pip install git+https://github.com/mingjutsai/CisLink.git@v1.5.0
 ```
 
 The wheel, sdist and model files of each version are attached to its
-[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.4.0).
+[GitHub release](https://github.com/mingjutsai/CisLink/releases) (latest: v1.5.0).
 
 ## Tutorial
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cislink"
-version = "1.4.0"
+version = "1.5.0"
 description = "CRISPR-trained models of chromatin activity, 3D contact and cross-tissue co-activity linking noncoding variants and cis-regulatory elements to their target genes: CisLink-Extended (full model) and CisLink-Base (accessibility and RNA only)"
 readme = "README.md"
 requires-python = ">=3.10"
